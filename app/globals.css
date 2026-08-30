@@ -1,26 +1,366 @@
 @import "tailwindcss";
 
+/*
+  Cadence design system
+  --------------------------------------------------------------------------
+  A tuner-desk aesthetic: hairline rules, monospace labels, tick marks,
+  and a waveform motif. Every theme is a full remap of the token set below.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette tokens (overridden per theme) */
+  --bg: #07070a;
+  --bg-grid: rgba(255, 255, 255, 0.03);
+  --surface: #0d0e13;
+  --surface-2: #14161d;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  --text: #f4f4f6;
+  --text-dim: #a3a3ad;
+  --text-faint: #5a5b66;
+
+  --primary: #7cf7d0;
+  --primary-ink: #04120d;
+  --primary-dim: rgba(124, 247, 208, 0.16);
+  --accent: #b8a6ff;
+
+  --correct: #f4f4f6;
+  --pending: #5a5b66;
+  --incorrect: #ff6b6b;
+  --incorrect-bg: rgba(255, 107, 107, 0.16);
+  --caret: #7cf7d0;
+
+  --success: #7cf7d0;
+  --warn: #ffd479;
+  --danger: #ff6b6b;
+
+  --scrollbar-thumb: rgba(124, 247, 208, 0.35);
+  --scrollbar-thumb-hover: rgba(124, 247, 208, 0.6);
+
+  --glow: rgba(124, 247, 208, 0.45);
+  --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+
+  /* Static design values */
+  --radius: 4px;
+  --radius-lg: 10px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --tap: 180ms;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Space Grotesk", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo,
+    Consolas, monospace;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Themes                                                                     */
+/* -------------------------------------------------------------------------- */
+
+[data-theme="midnight"] {
+  --bg: #07070a;
+  --bg-grid: rgba(255, 255, 255, 0.03);
+  --surface: #0d0e13;
+  --surface-2: #14161d;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text: #f4f4f6;
+  --text-dim: #a3a3ad;
+  --text-faint: #5a5b66;
+  --primary: #7cf7d0;
+  --primary-ink: #04120d;
+  --primary-dim: rgba(124, 247, 208, 0.16);
+  --accent: #b8a6ff;
+  --correct: #f4f4f6;
+  --pending: #52535f;
+  --incorrect: #ff6b6b;
+  --incorrect-bg: rgba(255, 107, 107, 0.16);
+  --caret: #7cf7d0;
+  --scrollbar-thumb: rgba(124, 247, 208, 0.35);
+  --scrollbar-thumb-hover: rgba(124, 247, 208, 0.6);
+  --glow: rgba(124, 247, 208, 0.45);
+  color-scheme: dark;
+}
+
+[data-theme="paper"] {
+  --bg: #f6f4ef;
+  --bg-grid: rgba(20, 18, 12, 0.04);
+  --surface: #fffdf8;
+  --surface-2: #efece3;
+  --border: rgba(20, 18, 12, 0.12);
+  --border-strong: rgba(20, 18, 12, 0.26);
+  --text: #1a1813;
+  --text-dim: #5f5a4e;
+  --text-faint: #a49d8b;
+  --primary: #0f7d63;
+  --primary-ink: #ffffff;
+  --primary-dim: rgba(15, 125, 99, 0.12);
+  --accent: #6d51d6;
+  --correct: #1a1813;
+  --pending: #b8b2a2;
+  --incorrect: #c0392b;
+  --incorrect-bg: rgba(192, 57, 43, 0.12);
+  --caret: #0f7d63;
+  --scrollbar-thumb: rgba(15, 125, 99, 0.3);
+  --scrollbar-thumb-hover: rgba(15, 125, 99, 0.55);
+  --glow: rgba(15, 125, 99, 0.28);
+  --shadow: 0 24px 50px -24px rgba(60, 50, 30, 0.35);
+  color-scheme: light;
+}
+
+[data-theme="terminal"] {
+  --bg: #030a05;
+  --bg-grid: rgba(74, 246, 141, 0.05);
+  --surface: #061109;
+  --surface-2: #0a1a0f;
+  --border: rgba(74, 246, 141, 0.18);
+  --border-strong: rgba(74, 246, 141, 0.38);
+  --text: #c8ffd8;
+  --text-dim: #67b57f;
+  --text-faint: #3a6b49;
+  --primary: #4af68d;
+  --primary-ink: #021206;
+  --primary-dim: rgba(74, 246, 141, 0.16);
+  --accent: #8affb0;
+  --correct: #c8ffd8;
+  --pending: #2f5c3d;
+  --incorrect: #ff5f56;
+  --incorrect-bg: rgba(255, 95, 86, 0.18);
+  --caret: #4af68d;
+  --scrollbar-thumb: rgba(74, 246, 141, 0.4);
+  --scrollbar-thumb-hover: rgba(74, 246, 141, 0.7);
+  --glow: rgba(74, 246, 141, 0.5);
+  color-scheme: dark;
+}
+
+[data-theme="synthwave"] {
+  --bg: #120821;
+  --bg-grid: rgba(255, 92, 209, 0.06);
+  --surface: #1a0c2e;
+  --surface-2: #241040;
+  --border: rgba(124, 240, 255, 0.16);
+  --border-strong: rgba(124, 240, 255, 0.36);
+  --text: #f7e8ff;
+  --text-dim: #b98fd6;
+  --text-faint: #6f5090;
+  --primary: #ff5cd1;
+  --primary-ink: #1a0320;
+  --primary-dim: rgba(255, 92, 209, 0.16);
+  --accent: #7cf0ff;
+  --correct: #f7e8ff;
+  --pending: #5a3d7a;
+  --incorrect: #ff6b6b;
+  --incorrect-bg: rgba(255, 107, 107, 0.18);
+  --caret: #7cf0ff;
+  --scrollbar-thumb: rgba(255, 92, 209, 0.4);
+  --scrollbar-thumb-hover: rgba(124, 240, 255, 0.7);
+  --glow: rgba(255, 92, 209, 0.5);
+  color-scheme: dark;
+}
+
+[data-theme="nord"] {
+  --bg: #242933;
+  --bg-grid: rgba(236, 239, 244, 0.035);
+  --surface: #2e3440;
+  --surface-2: #3b4252;
+  --border: rgba(236, 239, 244, 0.1);
+  --border-strong: rgba(236, 239, 244, 0.22);
+  --text: #eceff4;
+  --text-dim: #a9b1c1;
+  --text-faint: #6b7488;
+  --primary: #88c0d0;
+  --primary-ink: #1c2530;
+  --primary-dim: rgba(136, 192, 208, 0.16);
+  --accent: #b48ead;
+  --correct: #eceff4;
+  --pending: #5b6373;
+  --incorrect: #bf616a;
+  --incorrect-bg: rgba(191, 97, 106, 0.2);
+  --caret: #88c0d0;
+  --scrollbar-thumb: rgba(136, 192, 208, 0.4);
+  --scrollbar-thumb-hover: rgba(136, 192, 208, 0.7);
+  --glow: rgba(136, 192, 208, 0.4);
+  color-scheme: dark;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tailwind theme bridge                                                      */
+/* -------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-text-faint: var(--text-faint);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-accent: var(--accent);
+  --color-correct: var(--correct);
+  --color-pending: var(--pending);
+  --color-incorrect: var(--incorrect);
+  --color-caret: var(--caret);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-sans: var(--font-ui);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* -------------------------------------------------------------------------- */
+/* Base                                                                       */
+/* -------------------------------------------------------------------------- */
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  height: 100%;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-width: thin;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center;
+  transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+/* Themed scrollbar (WebKit) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid var(--bg);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Utilities and motifs                                                       */
+/* -------------------------------------------------------------------------- */
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.hairline {
+  border: 1px solid var(--border);
+}
+
+.tick-row {
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--border) 0 1px,
+    transparent 1px 12px
+  );
+}
+
+.panel {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+}
+
+.glow-text {
+  text-shadow: 0 0 24px var(--glow);
+}
+
+/* CRT scanline overlay for the terminal theme */
+[data-theme="terminal"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.16) 0 1px,
+    transparent 1px 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* Caret */
+.caret {
+  display: inline-block;
+  width: 2px;
+  background: var(--caret);
+  border-radius: 2px;
+  box-shadow: 0 0 12px var(--glow);
+}
+.caret-blink {
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+@keyframes caret-blink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+.char-incorrect {
+  color: var(--incorrect);
+  background: var(--incorrect-bg);
+  border-radius: 2px;
+}
+.char-correct { color: var(--correct); }
+.char-pending { color: var(--pending); }
+.char-extra { color: var(--incorrect); opacity: 0.55; text-decoration: line-through; }
+
+/* Focus mode dims everything not marked active */
+.focus-dim {
+  filter: blur(3px) brightness(0.5);
+  opacity: 0.5;
+  transition: filter 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .caret-blink { animation: none; opacity: 1; }
 }

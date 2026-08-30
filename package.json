@@ -2,16 +2,32 @@
   "name": "cadence",
   "version": "0.1.0",
   "private": true,
+  "description": "A focus first typing trainer that treats speed as rhythm: live keystroke waveform, tempo lock metronome, and a ghost race against your past self.",
+  "license": "MIT",
+  "keywords": [
+    "typing-test",
+    "typing-trainer",
+    "wpm",
+    "nextjs",
+    "react",
+    "tailwindcss",
+    "typing-practice"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "idb-keyval": "^6.3.0",
+    "motion": "^13.1.1",
     "next": "16.3.3",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
