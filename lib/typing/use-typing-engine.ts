@@ -303,116 +303,99 @@ export function useTypingEngine(config: ModeConfig) {
     return () => window.clearInterval(id);
   }, [config.mode, config.timeSec, finalize]);
 
-  const handleKey = useCallback(
-    (e: KeyboardEvent) => {
-      const key = e.key;
-      const isMod = e.ctrlKey || e.metaKey || e.altKey;
-      if (isMod && key !== "Backspace") return;
+  const pressBackspace = useCallback((wholeWord = false) => {
+    setState((prev) => {
+      if (prev.status === "finished") return prev;
+      const typedWords = prev.typedWords.slice();
+      const current = typedWords[prev.wordIndex] ?? "";
+      let wordIndex = prev.wordIndex;
+      if (current.length > 0) {
+        typedWords[prev.wordIndex] = wholeWord ? "" : current.slice(0, -1);
+      } else if (prev.wordIndex > 0) {
+        const prevTyped = typedWords[prev.wordIndex - 1] ?? "";
+        const prevTarget = prev.targetWords[prev.wordIndex - 1] ?? "";
+        if (prevTyped !== prevTarget) {
+          wordIndex = prev.wordIndex - 1;
+          if (wholeWord) typedWords[wordIndex] = "";
+        }
+      }
+      return {
+        ...prev,
+        typedWords,
+        wordIndex,
+        lastEvent: { id: prev.tick + 1, correct: true, kind: "back" },
+        tick: prev.tick + 1,
+      };
+    });
+  }, []);
 
-      const isSpace =
-        key === " " || key === "Spacebar" || key === "Space" || e.code === "Space";
+  const pressSpace = useCallback(() => {
+    setState((prev) => {
+      if (prev.status === "finished") return prev;
+      const current = prev.typedWords[prev.wordIndex] ?? "";
+      if (current.length === 0) return prev;
 
-      if (key === "Backspace") {
-        e.preventDefault();
-        setState((prev) => {
-          if (prev.status === "finished") return prev;
-          const typedWords = prev.typedWords.slice();
-          const current = typedWords[prev.wordIndex] ?? "";
-          let wordIndex = prev.wordIndex;
-          if (current.length > 0) {
-            typedWords[prev.wordIndex] = isMod ? "" : current.slice(0, -1);
-          } else if (prev.wordIndex > 0) {
-            const prevTyped = typedWords[prev.wordIndex - 1] ?? "";
-            const prevTarget = prev.targetWords[prev.wordIndex - 1] ?? "";
-            if (prevTyped !== prevTarget) {
-              wordIndex = prev.wordIndex - 1;
-              if (isMod) typedWords[wordIndex] = "";
-            }
-          }
-          return {
-            ...prev,
-            typedWords,
-            wordIndex,
-            lastEvent: { id: prev.tick + 1, correct: true, kind: "back" },
-            tick: prev.tick + 1,
-          };
-        });
-        return;
+      const startedAt = prev.startedAt ?? performance.now();
+      const target = prev.targetWords[prev.wordIndex] ?? "";
+      const wordOk = current === target;
+      const isFinal = prev.wordIndex >= prev.targetWords.length - 1;
+
+      const base: EngineState = {
+        ...prev,
+        status: "running",
+        startedAt,
+        keyTimes: [...prev.keyTimes, performance.now()],
+        keyStats: withKeyStat(prev.keyStats, "space", true),
+      };
+
+      if (isFinal && config.mode !== "time" && config.mode !== "zen") {
+        return {
+          ...base,
+          status: "finished",
+          finishedAt: performance.now(),
+          result: computeResult(base, config, configKey, modeLabel),
+        };
       }
 
-      if (isSpace) {
-        e.preventDefault();
-        setState((prev) => {
-          if (prev.status === "finished") return prev;
-          const current = prev.typedWords[prev.wordIndex] ?? "";
-          if (current.length === 0) return prev;
-
-          const startedAt = prev.startedAt ?? performance.now();
-          const status: EngineStatus = "running";
-          const target = prev.targetWords[prev.wordIndex] ?? "";
-          const wordOk = current === target;
-          const isFinal = prev.wordIndex >= prev.targetWords.length - 1;
-
-          const base: EngineState = {
-            ...prev,
-            status,
-            startedAt,
-            keyTimes: [...prev.keyTimes, performance.now()],
-            keyStats: withKeyStat(prev.keyStats, "space", true),
-          };
-
-          if (
-            isFinal &&
-            config.mode !== "time" &&
-            config.mode !== "zen"
-          ) {
-            return {
-              ...base,
-              status: "finished",
-              finishedAt: performance.now(),
-              result: computeResult(base, config, configKey, modeLabel),
-            };
-          }
-
-          let targetWords = prev.targetWords;
-          const wordIndex = prev.wordIndex + 1;
-          const typedWords = prev.typedWords.slice();
-          if (typedWords[wordIndex] === undefined) typedWords[wordIndex] = "";
-          if (
-            (config.mode === "time" || config.mode === "zen") &&
-            wordIndex > targetWords.length - 12
-          ) {
-            targetWords = [
-              ...targetWords,
-              ...buildWords({ ...config, mode: "words" }, 40),
-            ];
-          }
-
-          return advanceTimeline({
-            ...base,
-            targetWords,
-            typedWords,
-            wordIndex,
-            lastEvent: { id: prev.tick + 1, correct: wordOk, kind: "space" },
-            tick: prev.tick + 1,
-          });
-        });
-        return;
+      let targetWords = prev.targetWords;
+      const wordIndex = prev.wordIndex + 1;
+      const typedWords = prev.typedWords.slice();
+      if (typedWords[wordIndex] === undefined) typedWords[wordIndex] = "";
+      if (
+        (config.mode === "time" || config.mode === "zen") &&
+        wordIndex > targetWords.length - 12
+      ) {
+        targetWords = [
+          ...targetWords,
+          ...buildWords({ ...config, mode: "words" }, 40),
+        ];
       }
 
-      if (key.length !== 1) return;
-      e.preventDefault();
+      return advanceTimeline({
+        ...base,
+        targetWords,
+        typedWords,
+        wordIndex,
+        lastEvent: { id: prev.tick + 1, correct: wordOk, kind: "space" },
+        tick: prev.tick + 1,
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.mode, configKey, modeLabel]);
 
+  const pressChar = useCallback(
+    (char: string) => {
+      if (char.length !== 1) return;
       setState((prev) => {
         if (prev.status === "finished") return prev;
         const startedAt = prev.startedAt ?? performance.now();
         const current = prev.typedWords[prev.wordIndex] ?? "";
         const target = prev.targetWords[prev.wordIndex] ?? "";
         const expected = target[current.length];
-        const ok = key === expected;
+        const ok = char === expected;
 
         const typedWords = prev.typedWords.slice();
-        typedWords[prev.wordIndex] = current + key;
+        typedWords[prev.wordIndex] = current + char;
 
         const base: EngineState = {
           ...prev,
@@ -422,7 +405,7 @@ export function useTypingEngine(config: ModeConfig) {
           keyTimes: [...prev.keyTimes, performance.now()],
           keyStats:
             expected !== undefined
-              ? withKeyStat(prev.keyStats, key.toLowerCase(), ok)
+              ? withKeyStat(prev.keyStats, char.toLowerCase(), ok)
               : prev.keyStats,
           lastEvent: { id: prev.tick + 1, correct: ok, kind: "char" },
           tick: prev.tick + 1,
@@ -447,7 +430,46 @@ export function useTypingEngine(config: ModeConfig) {
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [config.mode, config.timeSec, config.language, config.codeLang, config.punctuation, config.numbers, configKey, modeLabel],
+    [config.mode, configKey, modeLabel],
+  );
+
+  /** Feed raw text (one or more characters) from a composed input event. */
+  const pressText = useCallback(
+    (text: string) => {
+      for (const ch of text) {
+        if (ch === " ") pressSpace();
+        else pressChar(ch);
+      }
+    },
+    [pressChar, pressSpace],
+  );
+
+  const handleKey = useCallback(
+    (e: KeyboardEvent) => {
+      const key = e.key;
+      const isMod = e.ctrlKey || e.metaKey || e.altKey;
+      if (isMod && key !== "Backspace") return;
+
+      if (key === "Backspace") {
+        e.preventDefault();
+        pressBackspace(isMod);
+        return;
+      }
+      if (
+        key === " " ||
+        key === "Spacebar" ||
+        key === "Space" ||
+        e.code === "Space"
+      ) {
+        e.preventDefault();
+        pressSpace();
+        return;
+      }
+      if (key.length !== 1) return;
+      e.preventDefault();
+      pressChar(key);
+    },
+    [pressBackspace, pressSpace, pressChar],
   );
 
   const finishZen = useCallback(() => {
@@ -527,5 +549,12 @@ export function useTypingEngine(config: ModeConfig) {
     };
   }, [state, config.mode, config.timeSec, configKey, modeLabel]);
 
-  return { snapshot, handleKey, restart, finishZen };
+  return {
+    snapshot,
+    handleKey,
+    pressText,
+    pressBackspace,
+    restart,
+    finishZen,
+  };
 }

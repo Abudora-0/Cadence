@@ -1,19 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSettings } from "@/lib/store/settings-store";
 import { useTypingEngine } from "@/lib/typing/use-typing-engine";
-import {
-  addRun,
-  bestForConfig,
-  useHistory,
-} from "@/lib/store/history-store";
-import {
-  playFanfare,
-  playKey,
-  unlockAudio,
-} from "@/lib/audio/sound-engine";
+import { addRun, bestForConfig, useHistory } from "@/lib/store/history-store";
+import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
 import type { RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
@@ -24,6 +22,11 @@ import { MetronomePulse } from "./metronome-pulse";
 import { GhostRace } from "./ghost-race";
 import { ResultsCard } from "./results-card";
 
+const TYPING_KEYS = new Set(["Backspace"]);
+function isTypingKey(key: string, code: string): boolean {
+  return key.length === 1 || key === " " || code === "Space" || TYPING_KEYS.has(key);
+}
+
 export function TypingTest() {
   const config = useSettings((s) => s.config);
   const voice = useSettings((s) => s.voice);
@@ -33,36 +36,45 @@ export function TypingTest() {
   const showGhost = useSettings((s) => s.ghost);
   const hydrated = useSettings((s) => s.hydrated);
 
-  const { snapshot, handleKey, restart, finishZen } = useTypingEngine(config);
+  const { snapshot, handleKey, pressText, pressBackspace, restart, finishZen } =
+    useTypingEngine(config);
   const { runs } = useHistory();
 
-  const [focused, setFocused] = useState(true);
-  const idleTimer = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputFocused, setInputFocused] = useState(false);
+  const lastKeyHandledAt = useRef(0);
   const lastEventId = useRef<number>(-1);
   const savedResultId = useRef<string | null>(null);
 
   const best = bestForConfig(runs, snapshot.configKey);
 
-  const nudgeFocus = useCallback(() => {
-    setFocused(true);
-    if (idleTimer.current) window.clearTimeout(idleTimer.current);
-    idleTimer.current = window.setTimeout(() => setFocused(false), 2600);
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // Global key handling: routing, restart, escape.
+  const restartRun = useCallback(() => {
+    restart();
+    focusInput();
+  }, [restart, focusInput]);
+
+  // Put the cursor in the hidden field on first load so a physical keyboard
+  // works without a click.
+  useEffect(() => {
+    focusInput();
+  }, [focusInput]);
+
+  // Global shortcuts. Character input is handled on the hidden field, with this
+  // as a fallback for physical keyboards when the field is not focused.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      unlockAudio();
-
       if (e.key === "Tab") {
         e.preventDefault();
-        restart();
-        nudgeFocus();
+        restartRun();
         return;
       }
       if (e.key === "Escape") {
         e.preventDefault();
-        restart();
+        restartRun();
         return;
       }
       if (
@@ -81,26 +93,75 @@ export function TypingTest() {
         (target.tagName === "INPUT" ||
           target.tagName === "TEXTAREA" ||
           target.isContentEditable ||
-          target.getAttribute("role") === "listbox" ||
           target.closest('[role="listbox"],[role="dialog"]'))
       ) {
         return;
       }
 
+      unlockAudio();
       handleKey(e);
-      if (
-        e.key.length === 1 ||
-        e.key === " " ||
-        e.code === "Space" ||
-        e.key === "Backspace"
-      ) {
-        nudgeFocus();
-      }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleKey, restart, finishZen, nudgeFocus, config.mode, snapshot.status]);
+  }, [handleKey, restartRun, finishZen, config.mode, snapshot.status]);
+
+  // Soft keyboard path: read composed text from the field, keep it empty.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    const onBeforeInput = (event: Event) => {
+      const e = event as InputEvent;
+      if (e.cancelable) e.preventDefault();
+      if (Date.now() - lastKeyHandledAt.current < 60) return;
+      unlockAudio();
+      const type = e.inputType;
+      if (
+        type === "insertText" ||
+        type === "insertCompositionText" ||
+        type === "insertFromPaste"
+      ) {
+        if (e.data) pressText(e.data);
+      } else if (type === "insertLineBreak" || type === "insertParagraph") {
+        if (config.mode === "zen" && snapshot.status === "running") finishZen();
+        else pressText(" ");
+      } else if (
+        type === "deleteContentBackward" ||
+        type === "deleteWordBackward" ||
+        type === "deleteByCut"
+      ) {
+        pressBackspace(type === "deleteWordBackward");
+      }
+    };
+    const keepEmpty = () => {
+      el.value = "";
+    };
+
+    el.addEventListener("beforeinput", onBeforeInput);
+    el.addEventListener("input", keepEmpty);
+    el.addEventListener("compositionend", keepEmpty);
+    return () => {
+      el.removeEventListener("beforeinput", onBeforeInput);
+      el.removeEventListener("input", keepEmpty);
+      el.removeEventListener("compositionend", keepEmpty);
+    };
+  }, [pressText, pressBackspace, finishZen, config.mode, snapshot.status]);
+
+  const onInputKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    const native = e.nativeEvent;
+    if (
+      native.isComposing ||
+      native.keyCode === 229 ||
+      e.key === "Unidentified" ||
+      e.key === "Process"
+    ) {
+      return;
+    }
+    unlockAudio();
+    handleKey(native);
+    if (isTypingKey(e.key, e.code)) lastKeyHandledAt.current = Date.now();
+  };
 
   // Keystroke sounds.
   useEffect(() => {
@@ -108,11 +169,8 @@ export function TypingTest() {
     if (!ev || ev.id === lastEventId.current) return;
     lastEventId.current = ev.id;
     if (ev.kind === "back") return;
-    if (!ev.correct && soundOnError) {
-      playKey(voice, { error: true });
-    } else {
-      playKey(voice);
-    }
+    if (!ev.correct && soundOnError) playKey(voice, { error: true });
+    else playKey(voice);
   }, [snapshot.lastEvent, voice, soundOnError]);
 
   // Persist finished runs once.
@@ -126,15 +184,18 @@ export function TypingTest() {
 
   const running = snapshot.status === "running";
   const finished = snapshot.status === "finished";
+  const wordsFocused = inputFocused || finished;
 
   return (
     <div className="flex w-full flex-col gap-8">
       <motion.div
-        animate={{ opacity: running && focusMode ? 0.15 : 1, y: running && focusMode ? -4 : 0 }}
+        animate={{
+          opacity: running && focusMode && inputFocused ? 0.15 : 1,
+          y: running && focusMode && inputFocused ? -4 : 0,
+        }}
         transition={{ duration: 0.4 }}
-        className="pointer-events-auto"
       >
-        <ModeBar onAnyChange={restart} />
+        <ModeBar onAnyChange={restartRun} />
       </motion.div>
 
       <div className="flex flex-col gap-6">
@@ -143,12 +204,49 @@ export function TypingTest() {
           <MetronomePulse intervalMs={snapshot.keyIntervalMs} running={running} />
         </div>
 
-        <div className="panel px-5 py-7 sm:px-8 sm:py-9">
-          <WordStream
-            snapshot={snapshot}
-            focused={focused || !running}
-            onFocusRequest={nudgeFocus}
-          />
+        <div className="panel relative px-5 py-7 sm:px-8 sm:py-9">
+          <div className="relative">
+            <WordStream
+              snapshot={snapshot}
+              focused={wordsFocused}
+              onFocusRequest={focusInput}
+            />
+
+            <input
+              ref={inputRef}
+              type="text"
+              defaultValue=""
+              onKeyDown={onInputKeyDown}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              inputMode="text"
+              aria-label="Type the words shown above"
+              style={{ outline: "none" }}
+              className="absolute inset-0 z-10 h-full w-full cursor-text bg-transparent text-[16px] text-transparent caret-transparent"
+            />
+
+            <AnimatePresence>
+              {!inputFocused && !finished && (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={focusInput}
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] backdrop-blur-[2px]"
+                >
+                  <span className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                    {running ? "tap to keep typing" : "click or tap to start"}
+                  </span>
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+
           <div className="mt-6 border-t border-[var(--border)] pt-4">
             <KeystrokeWaveform lastEvent={snapshot.lastEvent} running={running} />
           </div>
@@ -169,10 +267,7 @@ export function TypingTest() {
           )}
           <button
             type="button"
-            onClick={() => {
-              restart();
-              nudgeFocus();
-            }}
+            onClick={restartRun}
             className="self-start rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
           >
             {config.mode === "zen" && running ? "finish  (enter)" : "restart  (tab)"}
@@ -193,14 +288,8 @@ export function TypingTest() {
               previousBest={
                 best && best.id !== snapshot.result.id ? best.wpm : null
               }
-              onNext={() => {
-                restart();
-                nudgeFocus();
-              }}
-              onRepeat={() => {
-                restart();
-                nudgeFocus();
-              }}
+              onNext={restartRun}
+              onRepeat={restartRun}
             />
           </motion.div>
         )}
@@ -209,7 +298,7 @@ export function TypingTest() {
       {showGraph && running && snapshot.samples.length > 1 && (
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: focusMode ? 0.25 : 1 }}
+          animate={{ opacity: focusMode && inputFocused ? 0.25 : 1 }}
           className="panel p-4"
         >
           <span className="mono-label">Live tempo</span>

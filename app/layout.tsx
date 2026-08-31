@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { DEFAULT_THEME } from "@/lib/themes";
 import { Providers } from "@/components/providers";
@@ -76,6 +78,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Providers>
           <SiteChrome>{children}</SiteChrome>
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
