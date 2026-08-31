@@ -12,7 +12,7 @@ races alongside you.
 
 <br />
 
-[![Live demo](https://img.shields.io/badge/demo-cadence--type.vercel.app-7cf7d0?style=flat-square&logo=vercel&logoColor=white)](https://cadence-type.vercel.app)
+[![Live demo](https://img.shields.io/badge/demo-cadencce.vercel.app-7cf7d0?style=flat-square&logo=vercel&logoColor=white)](https://cadencce.vercel.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-b8a6ff?style=flat-square)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)](https://react.dev)
@@ -20,7 +20,7 @@ races alongside you.
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-7cf7d0?style=flat-square)](https://github.com/Abudora-0/Cadence/pulls)
 
-[Live demo](https://cadence-type.vercel.app) &nbsp;/&nbsp; [Report a bug](https://github.com/Abudora-0/Cadence/issues) &nbsp;/&nbsp; [Request a feature](https://github.com/Abudora-0/Cadence/issues)
+[Live demo](https://cadencce.vercel.app) &nbsp;/&nbsp; [Report a bug](https://github.com/Abudora-0/Cadence/issues) &nbsp;/&nbsp; [Request a feature](https://github.com/Abudora-0/Cadence/issues)
 
 </div>
 
