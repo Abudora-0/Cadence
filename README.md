@@ -52,6 +52,7 @@ local first
 | **Command bar** | `Cmd` / `Ctrl` + `K` for modes, themes, navigation and settings. |
 | **Local first** | No account, no backend. Settings live in local storage and run history lives in IndexedDB on your device. |
 | **Considered motion** | Animated logo, page transitions, odometer counters, and a full `prefers-reduced-motion` fallback. |
+| **Works on touch** | Character input is routed through a hidden field, so on-screen keyboards work on phones and tablets. |
 
 ## Keyboard shortcuts
 
@@ -69,6 +70,7 @@ local first
 - **Animation** Motion
 - **State** Zustand for settings, a small store over `idb-keyval` for history
 - **Audio** Web Audio API, synthesised at runtime
+- **Telemetry** Vercel Analytics and Speed Insights
 - **Hosting** Vercel, zero configuration
 
 ## Getting started
@@ -92,6 +94,7 @@ npm run build      # production build
 npm run start      # serve the production build
 npm run lint       # eslint
 npm run typecheck  # tsc, no emit
+npm run social     # regenerate .github/social-preview.png
 ```
 
 ## Deployment
@@ -102,7 +105,9 @@ Cadence is a static client app and deploys to Vercel with no configuration.
 
 1. Push the repository to your Git provider.
 2. Import it at [vercel.com/new](https://vercel.com/new). The Next.js preset is detected automatically.
-3. Optionally set `NEXT_PUBLIC_SITE_URL` to your final domain so the metadata and Open Graph image use the right origin.
+3. Set `NEXT_PUBLIC_SITE_URL` to your final domain (Project Settings, Environment Variables) so metadata and the Open Graph image use the right origin.
+4. Enable Analytics and Speed Insights for the project in the Vercel dashboard.
+5. Upload `.github/social-preview.png` under Settings, General, Social preview on GitHub.
 
 ## Project structure
 
