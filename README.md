@@ -13,6 +13,7 @@ races alongside you.
 <br />
 
 [![Live demo](https://img.shields.io/badge/demo-cadencce.vercel.app-7cf7d0?style=flat-square&logo=vercel&logoColor=white)](https://cadencce.vercel.app)
+[![CI](https://img.shields.io/github/actions/workflow/status/Abudora-0/Cadence/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/Abudora-0/Cadence/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-b8a6ff?style=flat-square)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)](https://react.dev)
@@ -89,13 +90,15 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Scripts
 
 ```bash
-npm run dev        # start the dev server
-npm run build      # production build
-npm run start      # serve the production build
-npm run lint       # eslint
-npm run typecheck  # tsc, no emit
-npm run icons      # regenerate favicon, app icons and maskable icon
-npm run social     # regenerate .github/social-preview.png
+npm run dev         # start the dev server
+npm run build       # production build
+npm run start       # serve the production build
+npm run lint        # eslint
+npm run typecheck   # tsc, no emit
+npm run test        # vitest, single run
+npm run test:watch  # vitest, watch mode
+npm run icons       # regenerate favicon, app icons and maskable icon
+npm run social      # regenerate .github/social-preview.png
 ```
 
 ## Deployment
@@ -123,14 +126,30 @@ components/
 lib/
   audio/             Web Audio sound engine
   store/             settings, history and theme stores
-  typing/            the typing engine, word pools, quotes, code, stats
+  typing/            the typing engine, word pools, quotes, code, stats,
+                     and the *.test.ts suites
 scripts/             one off generators for the icons and social card
 ```
 
+## Tests
+
+The typing engine and the stats math are covered by Vitest.
+
+```bash
+npm run test
+```
+
+`stats.test.ts` covers the WPM, accuracy, consistency and tempo formulas.
+`words.test.ts` and `content.test.ts` cover deterministic text generation.
+`use-typing-engine.test.tsx` drives the hook through real runs: character
+matching, word commit and skip, backspace rules, run completion, progress,
+restart, and both the keydown and composed-input paths.
+
 ## Contributing
 
-Issues and pull requests are welcome. Please run `npm run lint` and
-`npm run typecheck` before opening a PR.
+Issues and pull requests are welcome. CI runs lint, typecheck, tests and a
+build on every push and pull request; run `npm run test` locally before
+opening a PR.
 
 ## License
 
