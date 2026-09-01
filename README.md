@@ -94,6 +94,7 @@ npm run build      # production build
 npm run start      # serve the production build
 npm run lint       # eslint
 npm run typecheck  # tsc, no emit
+npm run icons      # regenerate favicon, app icons and maskable icon
 npm run social     # regenerate .github/social-preview.png
 ```
 
@@ -112,7 +113,8 @@ Cadence is a static client app and deploys to Vercel with no configuration.
 ## Project structure
 
 ```
-app/                 routes: practice, stats, about, opengraph image
+app/                 routes plus robots, sitemap, manifest, icons,
+                     opengraph image, and error boundaries
 components/
   chrome/            header, command bar, theme switcher, settings drawer
   logo/              the animated Cadence mark
@@ -122,6 +124,7 @@ lib/
   audio/             Web Audio sound engine
   store/             settings, history and theme stores
   typing/            the typing engine, word pools, quotes, code, stats
+scripts/             one off generators for the icons and social card
 ```
 
 ## Contributing

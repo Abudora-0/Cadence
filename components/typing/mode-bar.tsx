@@ -116,7 +116,7 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
             className="w-36"
             options={[
               { value: "english", label: "English 200" },
-              { value: "english-1k", label: "English 1k" },
+              { value: "english-1k", label: "English wide" },
             ]}
             value={config.language}
             onChange={fire(setLanguage)}

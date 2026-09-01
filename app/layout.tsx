@@ -3,20 +3,18 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { DEFAULT_THEME } from "@/lib/themes";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "@/components/providers";
 import { SiteChrome } from "@/components/site-chrome";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://cadencce.vercel.app";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
     default: "Cadence - find your typing rhythm",
     template: "%s - Cadence",
   },
-  description:
-    "Cadence is a focus-first typing trainer. Tune out the noise with ambient sound and a distraction-free surface, watch your speed graph build in real time, and race a ghost of your past self.",
+  description: SITE_DESCRIPTION,
   keywords: [
     "typing test",
     "typing trainer",
@@ -28,22 +26,25 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Abudora-0" }],
   creator: "Abudora-0",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     type: "website",
-    url: siteUrl,
+    url: SITE_URL,
     title: "Cadence - find your typing rhythm",
     description:
       "A focus-first typing trainer with ambient sound, a live speed graph, a keystroke heatmap, and a ghost race against your past self.",
-    siteName: "Cadence",
+    siteName: SITE_NAME,
   },
   twitter: {
     card: "summary_large_image",
     title: "Cadence - find your typing rhythm",
     description:
       "A focus-first typing trainer with ambient sound, a live speed graph, and a ghost race against your past self.",
-  },
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
 };
 
