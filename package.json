@@ -4,6 +4,9 @@
   "private": true,
   "description": "A focus first typing trainer that treats speed as rhythm: live keystroke waveform, tempo lock metronome, and a ghost race against your past self.",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "keywords": [
     "typing-test",
     "typing-trainer",

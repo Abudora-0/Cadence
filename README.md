@@ -76,7 +76,7 @@ local first
 
 ## Getting started
 
-Requires Node 20 or newer.
+Requires Node 22 or newer.
 
 ```bash
 git clone https://github.com/Abudora-0/Cadence.git
