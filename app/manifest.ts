@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: `${SITE_NAME} - typing trainer`,
     short_name: SITE_NAME,
     description: SITE_DESCRIPTION,
-    start_url: "/",
+    start_url: "/practice",
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",
