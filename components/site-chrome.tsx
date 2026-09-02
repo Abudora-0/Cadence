@@ -10,6 +10,7 @@ import { ThemeSwitcher } from "@/components/chrome/theme-switcher";
 import { SettingsDrawer } from "@/components/chrome/settings-drawer";
 import { CommandPalette } from "@/components/chrome/command-palette";
 import { SiteFooter } from "@/components/chrome/site-footer";
+import { Toaster } from "@/components/chrome/toaster";
 import { THEMES } from "@/lib/themes";
 import { cycleTheme } from "@/lib/store/theme-store";
 
@@ -181,6 +182,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
 
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <CommandPalette onOpenSettings={() => setSettingsOpen(true)} />
+      <Toaster />
     </>
   );
 }

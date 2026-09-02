@@ -2,11 +2,13 @@
 
 import { useMemo } from "react";
 import { summarize, useHistory } from "@/lib/store/history-store";
+import { useProgress } from "@/lib/store/progress-store";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Reveal } from "@/components/ui/reveal";
 
 export function SocialProof() {
   const { runs, ready } = useHistory();
+  const { progress } = useProgress();
   const summary = useMemo(() => summarize(runs), [runs]);
   const hasHistory = ready && runs.length > 0;
 
@@ -19,13 +21,8 @@ export function SocialProof() {
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
               <Stat label="Runs" value={summary.totalRuns} />
               <Stat label="Best WPM" value={summary.bestWpm} />
-              <Stat label="Avg WPM" value={summary.avgWpm} decimals={1} />
-              <Stat
-                label="Avg accuracy"
-                value={summary.avgAccuracy}
-                decimals={1}
-                suffix="%"
-              />
+              <Stat label="Avg accuracy" value={summary.avgAccuracy} decimals={1} suffix="%" />
+              <Stat label="Day streak" value={progress.streak.current} />
             </div>
             <p className="text-sm text-[var(--text-dim)]">
               All of it recorded on this device. Nothing left your browser.

@@ -5,8 +5,12 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import clsx from "clsx";
 import { clearHistory, summarize, useHistory } from "@/lib/store/history-store";
+import { clearProgress, useProgress } from "@/lib/store/progress-store";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Sparkline } from "@/components/ui/sparkline";
+import { AchievementsGrid } from "./achievements-grid";
+import { PracticeCalendar } from "./practice-calendar";
+import { StreakBadge } from "./streak-badge";
 import type { RunResult } from "@/lib/typing/types";
 
 function formatDuration(totalSeconds: number): string {
@@ -54,9 +58,55 @@ function Tile({
   );
 }
 
+function ClearButton({
+  label,
+  confirming,
+  onArm,
+  onCancel,
+  onConfirm,
+}: {
+  label: string;
+  confirming: boolean;
+  onArm: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={onArm}
+        className="rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-faint)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+      >
+        {label}
+      </button>
+    );
+  }
+  return (
+    <span className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={onConfirm}
+        className="rounded-[var(--radius)] border border-[var(--danger)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--danger)]"
+      >
+        Confirm delete
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-faint)]"
+      >
+        cancel
+      </button>
+    </span>
+  );
+}
+
 export function StatsView() {
   const { runs, ready } = useHistory();
+  const { progress } = useProgress();
   const [confirming, setConfirming] = useState(false);
+  const [confirmingProgress, setConfirmingProgress] = useState(false);
 
   const summary = useMemo(() => summarize(runs), [runs]);
   const progression = useMemo(
@@ -87,7 +137,7 @@ export function StatsView() {
 
   return (
     <div className="flex flex-col gap-10">
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col gap-3">
         <span className="mono-label">Your record</span>
         <h1
           className="text-3xl font-semibold tracking-tight"
@@ -95,6 +145,10 @@ export function StatsView() {
         >
           Stats
         </h1>
+        <StreakBadge
+          streak={progress.streak}
+          totalDays={Object.keys(progress.runDays).length}
+        />
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -219,36 +273,31 @@ export function StatsView() {
         </div>
       </section>
 
-      <div className="flex items-center gap-3">
-        {!confirming ? (
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-faint)] transition-colors hover:border-[var(--incorrect)] hover:text-[var(--incorrect)]"
-          >
-            Clear history
-          </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => {
-                void clearHistory();
-                setConfirming(false);
-              }}
-              className="rounded-[var(--radius)] border border-[var(--incorrect)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--incorrect)]"
-            >
-              Confirm delete
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirming(false)}
-              className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-faint)]"
-            >
-              cancel
-            </button>
-          </>
-        )}
+      <PracticeCalendar runDays={progress.runDays} />
+
+      <AchievementsGrid unlocked={progress.achievements} />
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <ClearButton
+          label="Clear history"
+          confirming={confirming}
+          onArm={() => setConfirming(true)}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => {
+            void clearHistory();
+            setConfirming(false);
+          }}
+        />
+        <ClearButton
+          label="Clear progress"
+          confirming={confirmingProgress}
+          onArm={() => setConfirmingProgress(true)}
+          onCancel={() => setConfirmingProgress(false)}
+          onConfirm={() => {
+            void clearProgress();
+            setConfirmingProgress(false);
+          }}
+        />
       </div>
     </div>
   );

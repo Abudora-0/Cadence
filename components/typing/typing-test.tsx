@@ -11,7 +11,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useSettings } from "@/lib/store/settings-store";
 import { useTypingEngine } from "@/lib/typing/use-typing-engine";
 import { addRun, bestForConfig, useHistory } from "@/lib/store/history-store";
+import { recordRun, useProgress } from "@/lib/store/progress-store";
+import { pushToast } from "@/lib/store/toast-store";
+import { useTheme } from "@/lib/store/theme-store";
 import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
+import { achievementById } from "@/lib/typing/achievements";
 import { isUsableCustomText } from "@/lib/typing/custom-text";
 import type { RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
@@ -43,6 +47,13 @@ export function TypingTest() {
   const needsCustomText =
     config.mode === "custom" && !isUsableCustomText(customText);
   const { runs } = useHistory();
+
+  const theme = useTheme();
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
+  const { progress } = useProgress();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
@@ -184,6 +195,18 @@ export function TypingTest() {
     savedResultId.current = result.id;
     void addRun(result);
     playFanfare();
+    void recordRun(result, { theme: themeRef.current }).then((newly) => {
+      for (const id of newly) {
+        const def = achievementById(id);
+        if (def) {
+          pushToast({
+            kind: "achievement",
+            title: def.label,
+            body: def.blurb,
+          });
+        }
+      }
+    });
   }, [snapshot.result]);
 
   const running = snapshot.status === "running";
@@ -198,7 +221,14 @@ export function TypingTest() {
           y: running && focusMode && inputFocused ? -4 : 0,
         }}
         transition={{ duration: 0.4 }}
+        className="flex flex-col gap-3"
       >
+        {progress.streak.current > 0 && (
+          <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[var(--text-faint)]">
+            <span className="text-[var(--primary)]">&#9650;</span>{" "}
+            {progress.streak.current} day streak
+          </span>
+        )}
         <ModeBar onAnyChange={restartRun} />
       </motion.div>
 
