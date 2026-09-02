@@ -37,8 +37,8 @@ export const FEATURES: Feature[] = [
     motif: "graph",
   },
   {
-    title: "Per key heatmap",
-    body: "The results card grades every key you touched, tints a keyboard by accuracy, and calls out the three that keep tripping you up.",
+    title: "Per key heatmap and drills",
+    body: "Every run grades the keys you touched and tints a keyboard by accuracy. Your stats page keeps a lifetime version, and a weak-key drill builds runs out of real words that lean on the letters you miss.",
     motif: "heatmap",
   },
   {

@@ -2,13 +2,17 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import clsx from "clsx";
 import { clearHistory, summarize, useHistory } from "@/lib/store/history-store";
 import { clearProgress, useProgress } from "@/lib/store/progress-store";
+import { useSettings } from "@/lib/store/settings-store";
+import { aggregateKeyStats, weakKeys } from "@/lib/typing/weak-keys";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Sparkline } from "@/components/ui/sparkline";
 import { Reveal } from "@/components/ui/reveal";
+import { KeyHeatmap } from "@/components/typing/key-heatmap";
 import { AchievementsGrid } from "./achievements-grid";
 import { PracticeCalendar } from "./practice-calendar";
 import { StreakBadge } from "./streak-badge";
@@ -104,8 +108,10 @@ function ClearButton({
 }
 
 export function StatsView() {
+  const router = useRouter();
   const { runs, ready } = useHistory();
   const { progress } = useProgress();
+  const setMode = useSettings((s) => s.setMode);
   const [confirming, setConfirming] = useState(false);
   const [confirmingProgress, setConfirmingProgress] = useState(false);
 
@@ -115,6 +121,13 @@ export function StatsView() {
     [runs],
   );
   const bests = useMemo(() => bestByConfig(runs), [runs]);
+  const lifetimeKeys = useMemo(() => aggregateKeyStats(runs), [runs]);
+  const weak = useMemo(() => weakKeys(lifetimeKeys), [lifetimeKeys]);
+
+  const startDrill = () => {
+    setMode("drill");
+    router.push("/practice");
+  };
 
   if (!ready) {
     return (
@@ -268,6 +281,32 @@ export function StatsView() {
               ))}
             </tbody>
           </table>
+        </div>
+      </Reveal>
+
+      <Reveal as="section" className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="mono-label">Per-key accuracy / all runs</span>
+          <motion.button
+            type="button"
+            onClick={startDrill}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            className="rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
+          >
+            Drill these keys
+          </motion.button>
+        </div>
+        <div className="panel flex flex-col items-center gap-4 p-5">
+          <KeyHeatmap keyStats={lifetimeKeys} />
+          <p className="font-mono text-[0.6rem] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+            {weak.basedOnHistory
+              ? "weakest keys "
+              : "keep practicing to map your weak spots · defaults "}
+            <span className="text-[var(--incorrect)]">
+              {weak.keys.join(" ")}
+            </span>
+          </p>
         </div>
       </Reveal>
 

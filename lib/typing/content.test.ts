@@ -31,6 +31,11 @@ describe("configKeyOf", () => {
     expect(configKeyOf(cfg({ mode: "code", codeLang: "python" }))).toBe("code:python");
   });
 
+  it("keys drill mode on the language", () => {
+    expect(configKeyOf(cfg({ mode: "drill", language: "english" }))).toBe("drill:english");
+    expect(configKeyOf(cfg({ mode: "drill", language: "french" }))).toBe("drill:french");
+  });
+
   it("differs between two configs that render different text", () => {
     expect(configKeyOf(cfg({ mode: "time", timeSec: 15 }))).not.toBe(
       configKeyOf(cfg({ mode: "time", timeSec: 60 })),
@@ -57,6 +62,7 @@ describe("configLabelOf", () => {
       "code javascript",
     );
     expect(configLabelOf(cfg({ mode: "zen" }))).toBe("zen");
+    expect(configLabelOf(cfg({ mode: "drill" }))).toBe("weak keys");
   });
 });
 

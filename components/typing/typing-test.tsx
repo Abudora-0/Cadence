@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -17,6 +18,7 @@ import { useTheme } from "@/lib/store/theme-store";
 import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
 import { achievementById } from "@/lib/typing/achievements";
 import { isUsableCustomText } from "@/lib/typing/custom-text";
+import { aggregateKeyStats, weakKeys } from "@/lib/typing/weak-keys";
 import type { ModeConfig, RunResult, RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
@@ -63,11 +65,16 @@ export function TypingTest({
   const showGhost = useSettings((s) => s.ghost);
   const hydrated = useSettings((s) => s.hydrated);
 
+  const { runs } = useHistory();
+  const weak = useMemo(() => weakKeys(aggregateKeyStats(runs)), [runs]);
+
   const { snapshot, handleKey, pressText, pressBackspace, restart, finishZen } =
-    useTypingEngine(config, customText, seed != null ? { seed } : undefined);
+    useTypingEngine(config, customText, {
+      ...(seed != null ? { seed } : {}),
+      ...(config.mode === "drill" ? { weakKeys: weak.keys } : {}),
+    });
   const needsCustomText =
     config.mode === "custom" && !isUsableCustomText(customText);
-  const { runs } = useHistory();
 
   const theme = useTheme();
   const themeRef = useRef(theme);

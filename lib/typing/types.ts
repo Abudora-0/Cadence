@@ -1,8 +1,23 @@
 import { seededFrom } from "./rng";
 
-export type Mode = "time" | "words" | "quote" | "code" | "zen" | "custom";
+export type Mode =
+  | "time"
+  | "words"
+  | "quote"
+  | "code"
+  | "zen"
+  | "custom"
+  | "drill";
 
-export type Language = "english" | "english-1k";
+export type Language =
+  | "english"
+  | "english-1k"
+  | "spanish"
+  | "french"
+  | "german"
+  | "italian"
+  | "portuguese"
+  | "roman-urdu";
 export type CodeLang = "javascript" | "python";
 
 export interface ModeConfig {
@@ -81,6 +96,7 @@ export function configKeyOf(config: ModeConfig, customText?: string): string {
   if (config.mode === "time") parts.push(String(config.timeSec));
   if (config.mode === "words") parts.push(String(config.wordCount));
   if (config.mode === "code") parts.push(config.codeLang);
+  if (config.mode === "drill") parts.push(config.language);
   if (config.mode === "time" || config.mode === "words") {
     parts.push(config.language);
     parts.push(config.punctuation ? "p1" : "p0");
@@ -103,5 +119,7 @@ export function configLabelOf(config: ModeConfig): string {
       return "zen";
     case "custom":
       return "custom";
+    case "drill":
+      return "weak keys";
   }
 }
