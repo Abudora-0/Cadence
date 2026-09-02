@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import {
   CUSTOM_TEXT_MAX_CHARS,
@@ -21,11 +22,11 @@ export function CustomTextModal({
   onClose,
   onSave,
 }: CustomTextModalProps) {
-  return (
+  const overlay = (
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[70] flex items-start justify-center bg-black/55 px-4 pt-[12vh] backdrop-blur-sm"
+          className="fixed inset-0 z-[75] flex items-start justify-center bg-black/55 px-4 pt-[12vh] backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -40,6 +41,12 @@ export function CustomTextModal({
       )}
     </AnimatePresence>
   );
+
+  // Portalled to the body so it is never trapped inside the mode bar's
+  // transformed / blurred ancestors.
+  return typeof document !== "undefined"
+    ? createPortal(overlay, document.body)
+    : null;
 }
 
 function Panel({
