@@ -32,7 +32,7 @@ export function Segmented<T extends string | number>({
       role="radiogroup"
       aria-label={ariaLabel}
       className={clsx(
-        "relative inline-flex items-center gap-0.5 rounded-[var(--radius)] border p-0.5",
+        "relative inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-[var(--radius)] border p-0.5",
         "border-[var(--border)] bg-[var(--surface)]",
       )}
     >

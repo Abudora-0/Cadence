@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { Segmented } from "@/components/ui/segmented";
 import { ThemedSelect } from "@/components/ui/themed-select";
 import { TogglePill } from "@/components/ui/toggle-pill";
@@ -46,7 +46,7 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
   return (
     <motion.div
       layout
-      className="panel flex flex-wrap items-center gap-x-5 gap-y-3 px-4 py-3"
+      className="panel flex flex-wrap items-center gap-x-3 gap-y-3 px-3 py-3 sm:gap-x-5 sm:px-4"
     >
       <Segmented
         ariaLabel="Practice mode"
@@ -55,90 +55,63 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
         onChange={fire(setMode)}
       />
 
-      <span className="h-5 w-px bg-[var(--border)]" />
+      <span className="hidden h-5 w-px bg-[var(--border)] sm:block" />
 
-      <AnimatePresence initial={false}>
-        {config.mode === "time" && (
-          <motion.div
-            key="time"
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={{ duration: 0.16 }}
-          >
-            <Segmented
-              size="sm"
-              ariaLabel="Seconds"
-              options={TIME_OPTIONS.map((t) => ({ value: t, label: `${t}s` }))}
-              value={config.timeSec}
-              onChange={fire(setTime)}
-            />
-          </motion.div>
-        )}
+      {config.mode === "time" && (
+        <div key="time" className="rise-in">
+          <Segmented
+            size="sm"
+            ariaLabel="Seconds"
+            options={TIME_OPTIONS.map((t) => ({ value: t, label: `${t}s` }))}
+            value={config.timeSec}
+            onChange={fire(setTime)}
+          />
+        </div>
+      )}
 
-        {config.mode === "words" && (
-          <motion.div
-            key="words"
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={{ duration: 0.16 }}
-          >
-            <Segmented
-              size="sm"
-              ariaLabel="Word count"
-              options={WORD_OPTIONS.map((w) => ({ value: w, label: String(w) }))}
-              value={config.wordCount}
-              onChange={fire(setWordCount)}
-            />
-          </motion.div>
-        )}
+      {config.mode === "words" && (
+        <div key="words" className="rise-in">
+          <Segmented
+            size="sm"
+            ariaLabel="Word count"
+            options={WORD_OPTIONS.map((w) => ({ value: w, label: String(w) }))}
+            value={config.wordCount}
+            onChange={fire(setWordCount)}
+          />
+        </div>
+      )}
 
-        {config.mode === "code" && (
-          <motion.div
-            key="code"
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={{ duration: 0.16 }}
-          >
-            <ThemedSelect<CodeLang>
-              ariaLabel="Language"
-              className="w-40"
-              options={[
-                { value: "javascript", label: "JavaScript" },
-                { value: "python", label: "Python" },
-              ]}
-              value={config.codeLang}
-              onChange={fire(setCodeLang)}
-            />
-          </motion.div>
-        )}
+      {config.mode === "code" && (
+        <div key="code" className="rise-in">
+          <ThemedSelect<CodeLang>
+            ariaLabel="Language"
+            className="w-40"
+            options={[
+              { value: "javascript", label: "JavaScript" },
+              { value: "python", label: "Python" },
+            ]}
+            value={config.codeLang}
+            onChange={fire(setCodeLang)}
+          />
+        </div>
+      )}
 
-        {config.mode === "custom" && (
-          <motion.div
-            key="custom"
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
-            transition={{ duration: 0.16 }}
-            className="flex items-center gap-3"
+      {config.mode === "custom" && (
+        <div key="custom" className="rise-in flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setTextModalOpen(true)}
+            className="rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
           >
-            <button
-              type="button"
-              onClick={() => setTextModalOpen(true)}
-              className="rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
-            >
-              {isUsableCustomText(customText) ? "Edit text" : "Paste text"}
-            </button>
-            {isUsableCustomText(customText) && (
-              <span className="max-w-[16rem] truncate font-mono text-[0.62rem] text-[var(--text-faint)]">
-                {customText.replace(/\s+/g, " ").trim().slice(0, 60)}
-              </span>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {isUsableCustomText(customText) ? "Edit text" : "Paste text"}
+          </button>
+          {isUsableCustomText(customText) && (
+            <span className="max-w-full truncate font-mono text-[0.62rem] text-[var(--text-faint)] sm:max-w-[16rem]">
+              {customText.replace(/\s+/g, " ").trim().slice(0, 60)}
+            </span>
+          )}
+        </div>
+      )}
 
       {(config.mode === "time" || config.mode === "words") && (
         <>
