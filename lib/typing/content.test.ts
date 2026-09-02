@@ -36,6 +36,16 @@ describe("configKeyOf", () => {
       configKeyOf(cfg({ mode: "time", timeSec: 60 })),
     );
   });
+
+  it("keys custom mode on a hash of the passage", () => {
+    const a = configKeyOf(cfg({ mode: "custom" }), "hold a steady tempo");
+    const b = configKeyOf(cfg({ mode: "custom" }), "hold a steady tempo");
+    const c = configKeyOf(cfg({ mode: "custom" }), "a different passage here");
+    expect(a).toBe(b);
+    expect(a).not.toBe(c);
+    expect(a.startsWith("custom:")).toBe(true);
+    expect(configKeyOf(cfg({ mode: "custom" }))).toBe("custom:0");
+  });
 });
 
 describe("configLabelOf", () => {
@@ -80,8 +90,23 @@ describe("pickCodeSnippet", () => {
     }
   });
 
-  it("has at least one snippet per supported language", () => {
-    expect(CODE_SNIPPETS.some((s) => s.lang === "javascript")).toBe(true);
-    expect(CODE_SNIPPETS.some((s) => s.lang === "python")).toBe(true);
+  it("has a healthy pool per supported language", () => {
+    expect(CODE_SNIPPETS.filter((s) => s.lang === "javascript").length).toBeGreaterThanOrEqual(6);
+    expect(CODE_SNIPPETS.filter((s) => s.lang === "python").length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe("QUOTES", () => {
+  it("has a healthy pool with every length represented", () => {
+    expect(QUOTES.length).toBeGreaterThanOrEqual(20);
+    expect(QUOTES.some((q) => q.length === "short")).toBe(true);
+    expect(QUOTES.some((q) => q.length === "medium")).toBe(true);
+    expect(QUOTES.some((q) => q.length === "long")).toBe(true);
+  });
+
+  it("contains no em dashes", () => {
+    for (const q of QUOTES) {
+      expect(q.text.includes("—")).toBe(false);
+    }
   });
 });

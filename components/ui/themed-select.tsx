@@ -52,12 +52,13 @@ export function ThemedSelect<T extends string>({
 
   return (
     <div ref={rootRef} className={clsx("relative", className)}>
-      <button
+      <motion.button
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
         onClick={() => (open ? setOpen(false) : openMenu())}
+        whileTap={{ scale: 0.98 }}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -80,7 +81,7 @@ export function ThemedSelect<T extends string>({
             <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </motion.span>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {open && (
@@ -114,13 +115,15 @@ export function ThemedSelect<T extends string>({
               const selected = opt.value === value;
               return (
                 <li key={opt.value}>
-                  <button
+                  <motion.button
                     type="button"
                     role="option"
                     aria-selected={selected}
                     tabIndex={-1}
                     onMouseEnter={() => setActiveIdx(idx)}
                     onClick={() => commit(idx)}
+                    whileHover={{ x: 2 }}
+                    whileTap={{ scale: 0.98 }}
                     className={clsx(
                       "flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-2.5 py-1.5",
                       "font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors",
@@ -139,7 +142,7 @@ export function ThemedSelect<T extends string>({
                       {opt.label}
                     </span>
                     {opt.meta && <span className="opacity-50">{opt.meta}</span>}
-                  </button>
+                  </motion.button>
                 </li>
               );
             })}

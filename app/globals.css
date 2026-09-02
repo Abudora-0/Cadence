@@ -41,9 +41,18 @@
   --glow: rgba(124, 247, 208, 0.45);
   --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
 
+  --surface-raised: #191b23;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(124, 247, 208, 0.1),
+    transparent 70%
+  );
+
   /* Static design values */
   --radius: 4px;
   --radius-lg: 10px;
+  --radius-xl: 18px;
+  --section-gap: clamp(3.5rem, 7vw, 6rem);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --tap: 180ms;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system,
@@ -77,9 +86,19 @@
   --incorrect: #ff6b6b;
   --incorrect-bg: rgba(255, 107, 107, 0.16);
   --caret: #7cf7d0;
+  --success: #7cf7d0;
+  --warn: #ffd479;
+  --danger: #ff6b6b;
   --scrollbar-thumb: rgba(124, 247, 208, 0.35);
   --scrollbar-thumb-hover: rgba(124, 247, 208, 0.6);
   --glow: rgba(124, 247, 208, 0.45);
+  --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+  --surface-raised: #191b23;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(124, 247, 208, 0.1),
+    transparent 70%
+  );
   color-scheme: dark;
 }
 
@@ -102,10 +121,19 @@
   --incorrect: #c0392b;
   --incorrect-bg: rgba(192, 57, 43, 0.12);
   --caret: #0f7d63;
+  --success: #0f7d63;
+  --warn: #b7791f;
+  --danger: #c0392b;
   --scrollbar-thumb: rgba(15, 125, 99, 0.3);
   --scrollbar-thumb-hover: rgba(15, 125, 99, 0.55);
   --glow: rgba(15, 125, 99, 0.28);
   --shadow: 0 24px 50px -24px rgba(60, 50, 30, 0.35);
+  --surface-raised: #ffffff;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(15, 125, 99, 0.08),
+    transparent 70%
+  );
   color-scheme: light;
 }
 
@@ -128,9 +156,19 @@
   --incorrect: #ff5f56;
   --incorrect-bg: rgba(255, 95, 86, 0.18);
   --caret: #4af68d;
+  --success: #4af68d;
+  --warn: #ffd479;
+  --danger: #ff5f56;
   --scrollbar-thumb: rgba(74, 246, 141, 0.4);
   --scrollbar-thumb-hover: rgba(74, 246, 141, 0.7);
   --glow: rgba(74, 246, 141, 0.5);
+  --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  --surface-raised: #0c1f12;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(74, 246, 141, 0.12),
+    transparent 70%
+  );
   color-scheme: dark;
 }
 
@@ -153,9 +191,19 @@
   --incorrect: #ff6b6b;
   --incorrect-bg: rgba(255, 107, 107, 0.18);
   --caret: #7cf0ff;
+  --success: #6effc2;
+  --warn: #ffd479;
+  --danger: #ff6b6b;
   --scrollbar-thumb: rgba(255, 92, 209, 0.4);
   --scrollbar-thumb-hover: rgba(124, 240, 255, 0.7);
   --glow: rgba(255, 92, 209, 0.5);
+  --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  --surface-raised: #2b1450;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(255, 92, 209, 0.14),
+    transparent 70%
+  );
   color-scheme: dark;
 }
 
@@ -178,9 +226,19 @@
   --incorrect: #bf616a;
   --incorrect-bg: rgba(191, 97, 106, 0.2);
   --caret: #88c0d0;
+  --success: #a3be8c;
+  --warn: #ebcb8b;
+  --danger: #bf616a;
   --scrollbar-thumb: rgba(136, 192, 208, 0.4);
   --scrollbar-thumb-hover: rgba(136, 192, 208, 0.7);
   --glow: rgba(136, 192, 208, 0.4);
+  --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55);
+  --surface-raised: #434c5e;
+  --gradient-hero: radial-gradient(
+    60% 55% at 50% 0%,
+    rgba(136, 192, 208, 0.1),
+    transparent 70%
+  );
   color-scheme: dark;
 }
 
@@ -192,6 +250,7 @@
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-text: var(--text);
@@ -303,6 +362,13 @@ body {
   backdrop-filter: blur(12px);
 }
 
+.panel-raised {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
+
 .glow-text {
   text-shadow: 0 0 24px var(--glow);
 }
@@ -354,6 +420,39 @@ body {
   transition: filter 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Reveal (CSS driven, so it always completes even if the JS frame loop is    */
+/* throttled). The `Reveal` component flips data-shown via IntersectionObserver.*/
+/* -------------------------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.6s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 0.6s var(--ease-out) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -363,4 +462,6 @@ body {
     scroll-behavior: auto !important;
   }
   .caret-blink { animation: none; opacity: 1; }
+  .reveal { opacity: 1; transform: none; }
+  .rise-in { animation: none; }
 }

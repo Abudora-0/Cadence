@@ -5,9 +5,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { THEMES } from "@/lib/themes";
-import { setTheme } from "@/lib/store/theme-store";
+import { cycleTheme, setTheme } from "@/lib/store/theme-store";
 import { useSettings } from "@/lib/store/settings-store";
 import type { Mode } from "@/lib/typing/types";
+
+const THEME_ORDER = THEMES.map((t) => t.id);
 
 interface Command {
   id: string;
@@ -56,7 +58,10 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
       id: `mode-${m}`,
       label: `Mode: ${label}`,
       group: "Practice",
-      run: () => setMode(m),
+      run: () => {
+        setMode(m);
+        router.push("/practice");
+      },
     });
     return [
       modeCmd("time", "Time attack"),
@@ -64,11 +69,18 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
       modeCmd("quote", "Quote"),
       modeCmd("code", "Code"),
       modeCmd("zen", "Zen"),
+      modeCmd("custom", "Custom text"),
       {
-        id: "nav-home",
+        id: "nav-practice",
         label: "Go to Practice",
         group: "Navigate",
-        run: () => router.push("/"),
+        run: () => router.push("/practice"),
+      },
+      {
+        id: "nav-daily",
+        label: "Go to Daily challenge",
+        group: "Navigate",
+        run: () => router.push("/daily"),
       },
       {
         id: "nav-stats",
@@ -83,11 +95,25 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
         run: () => router.push("/about"),
       },
       {
+        id: "nav-home",
+        label: "Go to Home",
+        group: "Navigate",
+        hint: "landing",
+        run: () => router.push("/"),
+      },
+      {
         id: "open-settings",
         label: "Open tuning panel",
         group: "Navigate",
         hint: "settings",
         run: onOpenSettings,
+      },
+      {
+        id: "theme-cycle",
+        label: "Cycle theme",
+        group: "Appearance",
+        hint: "shift + t",
+        run: () => cycleTheme(THEME_ORDER),
       },
       ...THEMES.map<Command>((t) => ({
         id: `theme-${t.id}`,
@@ -170,10 +196,13 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
               )}
               {filtered.map((cmd, i) => (
                 <li key={cmd.id}>
-                  <button
+                  <motion.button
                     type="button"
                     onMouseEnter={() => setActive(i)}
                     onClick={runActive}
+                    animate={{ x: i === active ? 3 : 0 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 34 }}
                     className={clsx(
                       "flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-2 text-left transition-colors",
                       i === active ? "bg-[var(--primary-dim)]" : "",
@@ -183,7 +212,7 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
                     <span className="font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[var(--text-faint)]">
                       {cmd.hint ?? cmd.group}
                     </span>
-                  </button>
+                  </motion.button>
                 </li>
               ))}
             </ul>

@@ -3,8 +3,13 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import { DEFAULT_THEME } from "@/lib/themes";
+import { DEFAULT_THEME, THEME_STORAGE_KEY, THEMES } from "@/lib/themes";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+
+// Runs before first paint so a saved non-default theme does not flash.
+const themeBoot = `try{var k=${JSON.stringify(THEME_STORAGE_KEY)};var t=localStorage.getItem(k);var ok=${JSON.stringify(
+  THEMES.map((x) => x.id),
+)};if(t&&ok.indexOf(t)>-1)document.documentElement.dataset.theme=t;}catch(e){}`;
 import { Providers } from "@/components/providers";
 import { SiteChrome } from "@/components/site-chrome";
 
@@ -65,6 +70,7 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

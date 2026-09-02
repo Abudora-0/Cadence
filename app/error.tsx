@@ -42,7 +42,7 @@ export default function Error({
           Try again
         </button>
         <Link
-          href="/"
+          href="/practice"
           className="rounded-[var(--radius)] border border-[var(--border-strong)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--text-dim)] transition-colors hover:text-[var(--text)]"
         >
           Back to practice

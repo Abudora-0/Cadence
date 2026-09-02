@@ -63,6 +63,118 @@ export const CODE_SNIPPETS: CodeSnippet[] = [
         result.append(total / min(i + 1, window))
     return result`,
   },
+  {
+    lang: "javascript",
+    label: "once",
+    code: `function once(fn) {
+  let called = false;
+  let value;
+  return function (...args) {
+    if (!called) {
+      called = true;
+      value = fn.apply(this, args);
+    }
+    return value;
+  };
+}`,
+  },
+  {
+    lang: "javascript",
+    label: "range",
+    code: `const range = (start, end, step = 1) => {
+  const out = [];
+  for (let i = start; i < end; i += step) {
+    out.push(i);
+  }
+  return out;
+};`,
+  },
+  {
+    lang: "javascript",
+    label: "chunk",
+    code: `function chunk(array, size) {
+  const out = [];
+  for (let i = 0; i < array.length; i += size) {
+    out.push(array.slice(i, i + size));
+  }
+  return out;
+}`,
+  },
+  {
+    lang: "javascript",
+    label: "retry",
+    code: `async function retry(fn, times = 3) {
+  let lastError;
+  for (let i = 0; i < times; i += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}`,
+  },
+  {
+    lang: "javascript",
+    label: "pick",
+    code: `function pick(source, keys) {
+  const out = {};
+  for (const key of keys) {
+    if (key in source) {
+      out[key] = source[key];
+    }
+  }
+  return out;
+}`,
+  },
+  {
+    lang: "python",
+    label: "is_prime",
+    code: `def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True`,
+  },
+  {
+    lang: "python",
+    label: "flatten",
+    code: `def flatten(items):
+    out = []
+    for item in items:
+        if isinstance(item, list):
+            out.extend(flatten(item))
+        else:
+            out.append(item)
+    return out`,
+  },
+  {
+    lang: "python",
+    label: "word_count",
+    code: `def word_count(text):
+    counts = {}
+    for word in text.lower().split():
+        counts[word] = counts.get(word, 0) + 1
+    return counts`,
+  },
+  {
+    lang: "python",
+    label: "binary_search",
+    code: `def binary_search(items, target):
+    low, high = 0, len(items) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if items[mid] == target:
+            return mid
+        if items[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1`,
+  },
 ];
 
 export function pickCodeSnippet(lang: CodeLang, seed?: number): CodeSnippet {

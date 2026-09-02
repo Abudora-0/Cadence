@@ -12,6 +12,9 @@ interface ResultsCardProps {
   previousBest: number | null;
   onNext: () => void;
   onRepeat: () => void;
+  nextLabel?: string;
+  repeatLabel?: string;
+  hint?: string;
 }
 
 const container = {
@@ -55,8 +58,17 @@ function BigStat({
   );
 }
 
-export function ResultsCard({ result, previousBest, onNext, onRepeat }: ResultsCardProps) {
-  const isRecord = previousBest !== null && result.wpm > previousBest && previousBest > 0;
+export function ResultsCard({
+  result,
+  previousBest,
+  onNext,
+  onRepeat,
+  nextLabel = "Next run",
+  repeatLabel = "Repeat",
+  hint = "press Tab to restart",
+}: ResultsCardProps) {
+  const isRecord =
+    previousBest !== null && result.wpm > previousBest && previousBest > 0;
   const { chars } = result;
 
   return (
@@ -119,23 +131,29 @@ export function ResultsCard({ result, previousBest, onNext, onRepeat }: ResultsC
       </div>
 
       <motion.div variants={item} className="flex flex-wrap items-center gap-3">
-        <button
+        <motion.button
           type="button"
           onClick={onNext}
-          className="rounded-[var(--radius)] bg-[var(--primary)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--primary-ink)] transition-transform hover:-translate-y-0.5"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          className="rounded-[var(--radius)] bg-[var(--primary)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--primary-ink)] hover:shadow-[0_0_28px_var(--glow)]"
         >
-          Next run
-        </button>
-        <button
+          {nextLabel}
+        </motion.button>
+        <motion.button
           type="button"
           onClick={onRepeat}
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.96 }}
           className="rounded-[var(--radius)] border border-[var(--border-strong)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--text-dim)] transition-colors hover:text-[var(--text)]"
         >
-          Repeat
-        </button>
-        <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-[var(--text-faint)]">
-          press Tab to restart
-        </span>
+          {repeatLabel}
+        </motion.button>
+        {hint && (
+          <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+            {hint}
+          </span>
+        )}
       </motion.div>
     </motion.div>
   );

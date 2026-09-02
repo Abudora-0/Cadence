@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Segmented } from "@/components/ui/segmented";
 import { ThemedSelect } from "@/components/ui/themed-select";
 import { TogglePill } from "@/components/ui/toggle-pill";
 import { useSettings } from "@/lib/store/settings-store";
+import { isUsableCustomText } from "@/lib/typing/custom-text";
 import {
   TIME_OPTIONS,
   WORD_OPTIONS,
@@ -12,6 +14,7 @@ import {
   type Language,
   type Mode,
 } from "@/lib/typing/types";
+import { CustomTextModal } from "./custom-text-modal";
 
 const MODES: { value: Mode; label: string }[] = [
   { value: "time", label: "Time" },
@@ -19,11 +22,15 @@ const MODES: { value: Mode; label: string }[] = [
   { value: "quote", label: "Quote" },
   { value: "code", label: "Code" },
   { value: "zen", label: "Zen" },
+  { value: "custom", label: "Custom" },
 ];
 
 export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
   const config = useSettings((s) => s.config);
   const setMode = useSettings((s) => s.setMode);
+  const customText = useSettings((s) => s.customText);
+  const setCustomText = useSettings((s) => s.setCustomText);
+  const [textModalOpen, setTextModalOpen] = useState(false);
   const setTime = useSettings((s) => s.setTime);
   const setWordCount = useSettings((s) => s.setWordCount);
   const setLanguage = useSettings((s) => s.setLanguage);
@@ -50,7 +57,7 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
 
       <span className="h-5 w-px bg-[var(--border)]" />
 
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         {config.mode === "time" && (
           <motion.div
             key="time"
@@ -107,6 +114,30 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
             />
           </motion.div>
         )}
+
+        {config.mode === "custom" && (
+          <motion.div
+            key="custom"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 8 }}
+            transition={{ duration: 0.16 }}
+            className="flex items-center gap-3"
+          >
+            <button
+              type="button"
+              onClick={() => setTextModalOpen(true)}
+              className="rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
+            >
+              {isUsableCustomText(customText) ? "Edit text" : "Paste text"}
+            </button>
+            {isUsableCustomText(customText) && (
+              <span className="max-w-[16rem] truncate font-mono text-[0.62rem] text-[var(--text-faint)]">
+                {customText.replace(/\s+/g, " ").trim().slice(0, 60)}
+              </span>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {(config.mode === "time" || config.mode === "words") && (
@@ -141,6 +172,16 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
           </div>
         </>
       )}
+
+      <CustomTextModal
+        open={textModalOpen}
+        initialText={customText}
+        onClose={() => setTextModalOpen(false)}
+        onSave={(text) => {
+          setCustomText(text);
+          onAnyChange();
+        }}
+      />
     </motion.div>
   );
 }

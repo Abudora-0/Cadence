@@ -16,11 +16,12 @@ export function ThemeSwitcher() {
       className="relative"
       onMouseLeave={() => setOpen(false)}
     >
-      <button
+      <motion.button
         type="button"
         aria-label="Change theme"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
+        whileTap={{ scale: 0.96 }}
         className="flex items-center gap-2 rounded-[var(--radius)] border border-[var(--border)] px-2.5 py-1.5 transition-colors hover:border-[var(--border-strong)]"
       >
         <span className="flex gap-1">
@@ -35,7 +36,7 @@ export function ThemeSwitcher() {
         <span className="hidden font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-dim)] sm:inline">
           {current.label}
         </span>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {open && (
@@ -47,13 +48,15 @@ export function ThemeSwitcher() {
             className="absolute right-0 z-50 w-56 rounded-[var(--radius-lg)] border border-[var(--border-strong)] bg-[var(--surface-2)] p-1.5 shadow-[var(--shadow)] backdrop-blur"
           >
             {THEMES.map((theme) => (
-              <button
+              <motion.button
                 key={theme.id}
                 type="button"
                 onClick={() => {
                   setTheme(theme.id);
                   setOpen(false);
                 }}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.98 }}
                 className={clsx(
                   "flex w-full items-center gap-3 rounded-[var(--radius)] px-2.5 py-2 text-left transition-colors",
                   theme.id === active
@@ -63,8 +66,9 @@ export function ThemeSwitcher() {
               >
                 <span className="flex gap-1">
                   {theme.swatch.map((c, i) => (
-                    <span
+                    <motion.span
                       key={i}
+                      whileHover={{ scale: 1.14 }}
                       className="h-4 w-4 rounded-[3px] border border-black/20"
                       style={{ background: c }}
                     />
@@ -76,7 +80,7 @@ export function ThemeSwitcher() {
                     {theme.blurb}
                   </span>
                 </span>
-              </button>
+              </motion.button>
             ))}
           </motion.div>
         )}

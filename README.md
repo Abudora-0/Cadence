@@ -47,12 +47,16 @@ local first
 | **Ghost race** | Your best run for the current mode becomes a ghost that moves through the text in real time. Stay ahead of the mark to beat it. |
 | **Live speed graph** | Words per minute, raw speed, and error spikes plotted while you type and again in full on the results card. |
 | **Per key heatmap** | The results card grades every key you touched and calls out your shakiest three. |
+| **Watch your run back** | Every run records the exact timing of every character. Replay any run from your history, scrub the timeline, and change playback speed. |
+| **Daily challenge** | Fifty punctuated words, seeded from the date, so everyone gets the same passage each day. Restart as many times as you like and share a generated result card. |
+| **Achievements and streaks** | Nineteen unlockable achievements, a UTC day streak, and a GitHub style practice calendar on the stats page. |
+| **Custom text** | Paste any passage, up to 8000 characters, and practice against it. Personal bests and the ghost are scoped per passage. |
 | **Five instrument themes** | Midnight, Paper, Terminal, Synthwave and Nord. Each one remaps the entire surface, including the scrollbar, caret, selection, dropdowns, sliders and counters. |
 | **Synthesised sound** | Typewriter, mechanical, soft tape and marimba key voices, all generated with the Web Audio API. No audio files. |
-| **Modes** | Time attack, word sprint, quote, code (JavaScript and Python), and an open ended Zen mode. |
+| **Modes** | Time attack, word sprint, quote, code (JavaScript and Python), custom text, and an open ended Zen mode. |
 | **Command bar** | `Cmd` / `Ctrl` + `K` for modes, themes, navigation and settings. |
-| **Local first** | No account, no backend. Settings live in local storage and run history lives in IndexedDB on your device. |
-| **Considered motion** | Animated logo, page transitions, odometer counters, and a full `prefers-reduced-motion` fallback. |
+| **Local first** | No account, no backend. Settings live in local storage; run history and progress live in IndexedDB on your device. |
+| **Considered motion** | Animated logo, page transitions, odometer counters, scroll reveals, magnetic buttons, and a full `prefers-reduced-motion` fallback. |
 | **Works on touch** | Character input is routed through a hidden field, so on-screen keyboards work on phones and tablets. |
 
 ## Keyboard shortcuts
@@ -62,6 +66,7 @@ local first
 | `Tab` | Restart the current run with fresh text |
 | `Esc` | Reset back to the start |
 | `Enter` | Finish a Zen run |
+| `Shift` + `T` | Cycle through the themes |
 | `Cmd` / `Ctrl` + `K` | Open the command bar |
 
 ## Tech stack
@@ -69,7 +74,7 @@ local first
 - **Framework** Next.js 16 App Router, React 19, TypeScript
 - **Styling** Tailwind CSS v4 with a token driven theme system
 - **Animation** Motion
-- **State** Zustand for settings, a small store over `idb-keyval` for history
+- **State** Zustand for settings, small stores over `idb-keyval` for run history and progress
 - **Audio** Web Audio API, synthesised at runtime
 - **Telemetry** Vercel Analytics and Speed Insights
 - **Hosting** Vercel, zero configuration
@@ -116,24 +121,30 @@ Cadence is a static client app and deploys to Vercel with no configuration.
 ## Project structure
 
 ```
-app/                 routes plus robots, sitemap, manifest, icons,
-                     opengraph image, and error boundaries
+app/                 landing at /, the app at /practice, plus /daily,
+                     /stats, /about, /practice/replay/[id], and robots,
+                     sitemap, manifest, icons, opengraph image, error boundaries
 components/
-  chrome/            header, command bar, theme switcher, settings drawer
+  chrome/            header, command bar, theme switcher, settings drawer, toaster
+  daily/             the daily challenge and its share card
+  landing/           hero, oscilloscope, feature showcase, theme gallery
   logo/              the animated Cadence mark
-  typing/            engine driven UI: word stream, HUD, waveform, results
-  ui/                themed primitives: select, slider, segmented, counter
+  stats/             streak badge, achievements grid, practice calendar
+  typing/            engine driven UI: word stream, HUD, waveform, results, replay
+  ui/                themed primitives: select, slider, segmented, counter, reveal
 lib/
   audio/             Web Audio sound engine
-  store/             settings, history and theme stores
-  typing/            the typing engine, word pools, quotes, code, stats,
-                     and the *.test.ts suites
+  content/           shared feature and shortcut copy
+  store/             settings, history, progress, theme and toast stores
+  typing/            the typing engine, word pools, quotes, code, custom text,
+                     replay, streak, achievements, daily, stats, and the
+                     *.test.ts suites
 scripts/             one off generators for the icons and social card
 ```
 
 ## Tests
 
-The typing engine and the stats math are covered by Vitest.
+The typing engine, the stats math, and the progress systems are covered by Vitest.
 
 ```bash
 npm run test
@@ -144,6 +155,10 @@ npm run test
 `use-typing-engine.test.tsx` drives the hook through real runs: character
 matching, word commit and skip, backspace rules, run completion, progress,
 restart, and both the keydown and composed-input paths.
+`custom-text.test.ts`, `replay.test.ts`, `streak.test.ts`,
+`achievements.test.ts` and `daily.test.ts` cover custom passage tokenising,
+the replay model and caret math, streak transitions, each achievement rule,
+and the deterministic daily seed.
 
 ## Contributing
 

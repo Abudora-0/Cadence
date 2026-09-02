@@ -12,6 +12,7 @@ import {
 import { buildWords, estimateWordCount } from "./words";
 import { pickQuote } from "./quotes";
 import { pickCodeSnippet } from "./code-snippets";
+import { isUsableCustomText, tokenizeCustomText } from "./custom-text";
 import {
   accuracyFrom,
   consistencyFrom,
@@ -72,7 +73,16 @@ interface EngineState {
   tick: number;
 }
 
-function freshTarget(config: ModeConfig, seed?: number): string[] {
+function freshTarget(
+  config: ModeConfig,
+  seed?: number,
+  customText = "",
+): string[] {
+  if (config.mode === "custom") {
+    return isUsableCustomText(customText)
+      ? tokenizeCustomText(customText)
+      : buildWords({ ...config, mode: "words" }, 30, seed);
+  }
   if (config.mode === "quote") {
     return pickQuote(undefined, seed).text.split(/\s+/).filter(Boolean);
   }
@@ -88,10 +98,14 @@ function freshTarget(config: ModeConfig, seed?: number): string[] {
   return buildWords(config, estimateWordCount(config), seed);
 }
 
-function initialState(config: ModeConfig, seed?: number): EngineState {
+function initialState(
+  config: ModeConfig,
+  seed?: number,
+  customText = "",
+): EngineState {
   return {
     status: "idle",
-    targetWords: freshTarget(config, seed),
+    targetWords: freshTarget(config, seed, customText),
     typedWords: [""],
     wordIndex: 0,
     startedAt: null,
@@ -197,19 +211,34 @@ function computeResult(
     keyStats: state.keyStats,
     timeline: state.timeline,
     textLength: totalTargetChars(state.targetWords),
+    text: state.targetWords.join(" "),
+    typed: state.typedWords.slice(0, state.wordIndex + 1).join(" "),
   };
 }
 
-export function useTypingEngine(config: ModeConfig) {
-  const configKey = configKeyOf(config);
+interface EngineOpts {
+  /** Locks the run to a fixed text (daily challenge). Skips randomisation. */
+  seed?: number;
+}
+
+export function useTypingEngine(
+  config: ModeConfig,
+  customText = "",
+  opts: EngineOpts = {},
+) {
+  const lockedSeed = opts.seed;
+  const configKey = configKeyOf(config, customText);
   const modeLabel = configLabelOf(config);
 
   // The seed is fixed on the server and for the first client render so the
   // hydrated markup matches. A mount effect swaps in a random seed, and every
-  // restart bumps it, which reshuffles the word list.
-  const [seed, setSeed] = useState(0);
+  // restart bumps it, which reshuffles the word list. When `lockedSeed` is set
+  // the text stays fixed across mounts and restarts.
+  const [seed, setSeed] = useState(lockedSeed ?? 0);
 
-  const [state, setState] = useState<EngineState>(() => initialState(config, 0));
+  const [state, setState] = useState<EngineState>(() =>
+    initialState(config, lockedSeed ?? 0, customText),
+  );
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -217,9 +246,10 @@ export function useTypingEngine(config: ModeConfig) {
 
   /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
+    if (lockedSeed != null) return;
     const random = Math.floor(Math.random() * 0xffffffff) >>> 0;
     setSeed(random);
-    setState(initialState(config, random));
+    setState(initialState(config, random, customText));
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
@@ -228,15 +258,16 @@ export function useTypingEngine(config: ModeConfig) {
   const [prevKey, setPrevKey] = useState(configKey);
   if (prevKey !== configKey) {
     setPrevKey(configKey);
-    setState(initialState(config, seed));
+    setState(initialState(config, lockedSeed ?? seed, customText));
   }
 
   const restart = useCallback(() => {
-    const next = Math.floor(Math.random() * 0xffffffff) >>> 0;
+    const next =
+      lockedSeed ?? (Math.floor(Math.random() * 0xffffffff) >>> 0);
     setSeed(next);
-    setState(initialState(config, next));
+    setState(initialState(config, next, customText));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configKey]);
+  }, [configKey, lockedSeed]);
 
   const finalize = useCallback(() => {
     setState((prev) => {

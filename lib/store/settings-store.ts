@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { KeyVoice } from "@/lib/audio/sound-engine";
+import { CUSTOM_TEXT_MAX_CHARS } from "@/lib/typing/custom-text";
 import {
   DEFAULT_MODE_CONFIG,
   type CodeLang,
@@ -15,6 +16,7 @@ export type CaretStyle = "bar" | "block" | "underline" | "off";
 
 interface SettingsState {
   config: ModeConfig;
+  customText: string;
   voice: KeyVoice;
   volume: number;
   metronome: boolean;
@@ -27,6 +29,7 @@ interface SettingsState {
   hydrated: boolean;
 
   setMode: (mode: Mode) => void;
+  setCustomText: (text: string) => void;
   setTime: (sec: number) => void;
   setWordCount: (count: number) => void;
   setLanguage: (language: Language) => void;
@@ -46,6 +49,7 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       config: DEFAULT_MODE_CONFIG,
+      customText: "",
       voice: "typewriter",
       volume: 0.5,
       metronome: false,
@@ -58,6 +62,8 @@ export const useSettings = create<SettingsState>()(
       hydrated: false,
 
       setMode: (mode) => set((s) => ({ config: { ...s.config, mode } })),
+      setCustomText: (text) =>
+        set({ customText: text.slice(0, CUSTOM_TEXT_MAX_CHARS) }),
       setTime: (timeSec) => set((s) => ({ config: { ...s.config, timeSec } })),
       setWordCount: (wordCount) =>
         set((s) => ({ config: { ...s.config, wordCount } })),
@@ -79,10 +85,12 @@ export const useSettings = create<SettingsState>()(
     }),
     {
       name: "cadence.settings",
-      version: 1,
+      version: 2,
+      migrate: (persisted) => persisted as SettingsState,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         config: s.config,
+        customText: s.customText,
         voice: s.voice,
         volume: s.volume,
         metronome: s.metronome,

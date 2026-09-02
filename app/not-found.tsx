@@ -15,7 +15,7 @@ export default function NotFound() {
         The page you were looking for is not here. Head back and start a run.
       </p>
       <Link
-        href="/"
+        href="/practice"
         className="rounded-[var(--radius)] bg-[var(--primary)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--primary-ink)]"
       >
         Back to practice

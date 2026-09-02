@@ -11,8 +11,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { useSettings } from "@/lib/store/settings-store";
 import { useTypingEngine } from "@/lib/typing/use-typing-engine";
 import { addRun, bestForConfig, useHistory } from "@/lib/store/history-store";
+import { recordRun, useProgress } from "@/lib/store/progress-store";
+import { pushToast } from "@/lib/store/toast-store";
+import { useTheme } from "@/lib/store/theme-store";
 import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
-import type { RunSample } from "@/lib/typing/types";
+import { achievementById } from "@/lib/typing/achievements";
+import { isUsableCustomText } from "@/lib/typing/custom-text";
+import type { ModeConfig, RunResult, RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
 import { RunHud } from "./run-hud";
@@ -27,8 +32,30 @@ function isTypingKey(key: string, code: string): boolean {
   return key.length === 1 || key === " " || code === "Space" || TYPING_KEYS.has(key);
 }
 
-export function TypingTest() {
-  const config = useSettings((s) => s.config);
+interface TypingTestProps {
+  /** Fixed config for the daily challenge; hides the mode bar. */
+  lockedConfig?: ModeConfig;
+  /** Seed lock so the text is the same across mounts and restarts. */
+  seed?: number;
+  /** When set, finished runs are tagged as the daily challenge for that date. */
+  dailyDate?: string;
+  /** Overrides the stored configKey (used so daily bests are per date). */
+  configKeyOverride?: string;
+  /** Called once when a run is saved. */
+  onFinish?: (result: RunResult) => void;
+}
+
+export function TypingTest({
+  lockedConfig,
+  seed,
+  dailyDate,
+  configKeyOverride,
+  onFinish,
+}: TypingTestProps = {}) {
+  const storedConfig = useSettings((s) => s.config);
+  const storedCustomText = useSettings((s) => s.customText);
+  const config = lockedConfig ?? storedConfig;
+  const customText = lockedConfig ? "" : storedCustomText;
   const voice = useSettings((s) => s.voice);
   const soundOnError = useSettings((s) => s.soundOnError);
   const focusMode = useSettings((s) => s.focusMode);
@@ -37,8 +64,22 @@ export function TypingTest() {
   const hydrated = useSettings((s) => s.hydrated);
 
   const { snapshot, handleKey, pressText, pressBackspace, restart, finishZen } =
-    useTypingEngine(config);
+    useTypingEngine(config, customText, seed != null ? { seed } : undefined);
+  const needsCustomText =
+    config.mode === "custom" && !isUsableCustomText(customText);
   const { runs } = useHistory();
+
+  const theme = useTheme();
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
+  const { progress } = useProgress();
+
+  const onFinishRef = useRef(onFinish);
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
@@ -46,7 +87,8 @@ export function TypingTest() {
   const lastEventId = useRef<number>(-1);
   const savedResultId = useRef<string | null>(null);
 
-  const best = bestForConfig(runs, snapshot.configKey);
+  const effectiveKey = configKeyOverride ?? snapshot.configKey;
+  const best = bestForConfig(runs, effectiveKey);
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus({ preventScroll: true });
@@ -175,12 +217,38 @@ export function TypingTest() {
 
   // Persist finished runs once.
   useEffect(() => {
-    const result = snapshot.result;
-    if (!result || savedResultId.current === result.id) return;
-    savedResultId.current = result.id;
+    const raw = snapshot.result;
+    if (!raw || savedResultId.current === raw.id) return;
+    savedResultId.current = raw.id;
+
+    const result: RunResult = configKeyOverride
+      ? {
+          ...raw,
+          configKey: configKeyOverride,
+          configLabel: dailyDate ? `daily ${dailyDate}` : raw.configLabel,
+        }
+      : raw;
+
     void addRun(result);
     playFanfare();
-  }, [snapshot.result]);
+    onFinishRef.current?.(result);
+    void recordRun(result, {
+      theme: themeRef.current,
+      isDaily: Boolean(dailyDate),
+      dailyDate,
+    }).then((newly) => {
+      for (const id of newly) {
+        const def = achievementById(id);
+        if (def) {
+          pushToast({
+            kind: "achievement",
+            title: def.label,
+            body: def.blurb,
+          });
+        }
+      }
+    });
+  }, [snapshot.result, configKeyOverride, dailyDate]);
 
   const running = snapshot.status === "running";
   const finished = snapshot.status === "finished";
@@ -188,15 +256,24 @@ export function TypingTest() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <motion.div
-        animate={{
-          opacity: running && focusMode && inputFocused ? 0.15 : 1,
-          y: running && focusMode && inputFocused ? -4 : 0,
-        }}
-        transition={{ duration: 0.4 }}
-      >
-        <ModeBar onAnyChange={restartRun} />
-      </motion.div>
+      {!lockedConfig && (
+        <motion.div
+          animate={{
+            opacity: running && focusMode && inputFocused ? 0.15 : 1,
+            y: running && focusMode && inputFocused ? -4 : 0,
+          }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col gap-3"
+        >
+          {progress.streak.current > 0 && (
+            <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[var(--text-faint)]">
+              <span className="text-[var(--primary)]">&#9650;</span>{" "}
+              {progress.streak.current} day streak
+            </span>
+          )}
+          <ModeBar onAnyChange={restartRun} />
+        </motion.div>
+      )}
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -205,47 +282,62 @@ export function TypingTest() {
         </div>
 
         <div className="panel relative px-5 py-7 sm:px-8 sm:py-9">
-          <div className="relative">
-            <WordStream
-              snapshot={snapshot}
-              focused={wordsFocused}
-              onFocusRequest={focusInput}
-            />
+          {needsCustomText ? (
+            <div className="flex min-h-[9rem] flex-col items-center justify-center gap-3 text-center">
+              <span className="mono-label">Custom mode</span>
+              <p className="max-w-sm text-sm text-[var(--text-dim)]">
+                Paste a passage in the mode bar above and it becomes the text you
+                type against. Your bests and ghost are tracked per passage.
+              </p>
+            </div>
+          ) : (
+            <div className="relative">
+              <WordStream
+                snapshot={snapshot}
+                focused={wordsFocused}
+                onFocusRequest={focusInput}
+              />
 
-            <input
-              ref={inputRef}
-              type="text"
-              defaultValue=""
-              onKeyDown={onInputKeyDown}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              inputMode="text"
-              aria-label="Type the words shown above"
-              style={{ outline: "none" }}
-              className="absolute inset-0 z-10 h-full w-full cursor-text bg-transparent text-[16px] text-transparent caret-transparent"
-            />
+              <input
+                ref={inputRef}
+                type="text"
+                defaultValue=""
+                onKeyDown={onInputKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                inputMode="text"
+                aria-label="Type the words shown above"
+                style={{ outline: "none" }}
+                className="absolute inset-0 z-10 h-full w-full cursor-text bg-transparent text-[16px] text-transparent caret-transparent"
+              />
 
-            <AnimatePresence>
-              {!inputFocused && !finished && (
+              <AnimatePresence>
+                {!inputFocused && !finished && (
                 <motion.button
                   type="button"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={focusInput}
+                  whileHover="hover"
+                  whileTap="tap"
                   className="absolute inset-0 z-20 flex items-center justify-center bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] backdrop-blur-[2px]"
                 >
-                  <span className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                  <motion.span
+                    variants={{ hover: { y: -2 }, tap: { scale: 0.96 } }}
+                    className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)]"
+                  >
                     {running ? "tap to keep typing" : "click or tap to start"}
-                  </span>
+                  </motion.span>
                 </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           <div className="mt-6 border-t border-[var(--border)] pt-4">
             <KeystrokeWaveform lastEvent={snapshot.lastEvent} running={running} />
@@ -265,13 +357,15 @@ export function TypingTest() {
           ) : (
             <span />
           )}
-          <button
+          <motion.button
             type="button"
             onClick={restartRun}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.96 }}
             className="self-start rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
           >
             {config.mode === "zen" && running ? "finish  (enter)" : "restart  (tab)"}
-          </button>
+          </motion.button>
         </div>
       </div>
 
