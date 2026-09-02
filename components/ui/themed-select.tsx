@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 
@@ -19,6 +20,14 @@ interface ThemedSelectProps<T extends string> {
 }
 
 const MENU_MAX_PX = 256;
+const GAP = 4;
+
+interface MenuPos {
+  left: number;
+  top: number;
+  width: number;
+  dropUp: boolean;
+}
 
 export function ThemedSelect<T extends string>({
   options,
@@ -28,28 +37,56 @@ export function ThemedSelect<T extends string>({
   className,
 }: ThemedSelectProps<T>) {
   const [open, setOpen] = useState(false);
-  const [dropUp, setDropUp] = useState(false);
+  const [pos, setPos] = useState<MenuPos | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const current = options.find((o) => o.value === value) ?? options[0];
+
+  const measure = useCallback((): MenuPos | null => {
+    const el = rootRef.current;
+    if (!el || typeof window === "undefined") return null;
+    const r = el.getBoundingClientRect();
+    const needed = Math.min(MENU_MAX_PX, options.length * 30 + 8);
+    const below = window.innerHeight - r.bottom;
+    const dropUp = below < needed + GAP && r.top > below;
+    return {
+      left: r.left,
+      width: r.width,
+      dropUp,
+      top: dropUp ? r.top - GAP : r.bottom + GAP,
+    };
+  }, [options.length]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const sync = () => {
+      const next = measure();
+      if (next) setPos(next);
+    };
+    sync();
+    window.addEventListener("scroll", sync, true);
+    window.addEventListener("resize", sync);
+    return () => {
+      window.removeEventListener("scroll", sync, true);
+      window.removeEventListener("resize", sync);
+    };
+  }, [open, measure]);
 
   useEffect(() => {
     if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    const onDocDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
   }, [open]);
 
   const openMenu = () => {
     setActiveIdx(Math.max(0, options.findIndex((o) => o.value === value)));
-    const rect = rootRef.current?.getBoundingClientRect();
-    if (rect) {
-      const needed = Math.min(MENU_MAX_PX, options.length * 30 + 8);
-      const below = window.innerHeight - rect.bottom;
-      setDropUp(below < needed + 12 && rect.top > below);
-    }
+    setPos(measure());
     setOpen(true);
   };
 
@@ -58,6 +95,82 @@ export function ThemedSelect<T extends string>({
     if (opt) onChange(opt.value);
     setOpen(false);
   };
+
+  const menu =
+    open && pos ? (
+      <motion.ul
+        ref={menuRef}
+        role="listbox"
+        aria-label={ariaLabel}
+        initial={{ opacity: 0, y: pos.dropUp ? 6 : -6, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: pos.dropUp ? 6 : -6, scale: 0.98 }}
+        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        style={{
+          position: "fixed",
+          left: pos.left,
+          width: pos.width,
+          ...(pos.dropUp
+            ? { bottom: window.innerHeight - pos.top }
+            : { top: pos.top }),
+          maxHeight: MENU_MAX_PX,
+        }}
+        className={clsx(
+          "z-[55] overflow-y-auto overscroll-contain rounded-[var(--radius-lg)] border p-1",
+          "border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[var(--shadow)] backdrop-blur",
+        )}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActiveIdx((i) => (i + 1) % options.length);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActiveIdx((i) => (i - 1 + options.length) % options.length);
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            commit(activeIdx);
+          } else if (e.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      >
+        {options.map((opt, idx) => {
+          const selected = opt.value === value;
+          return (
+            <li key={opt.value}>
+              <motion.button
+                type="button"
+                role="option"
+                aria-selected={selected}
+                tabIndex={-1}
+                onMouseEnter={() => setActiveIdx(idx)}
+                onClick={() => commit(idx)}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.98 }}
+                className={clsx(
+                  "flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-2.5 py-1.5",
+                  "font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors",
+                  idx === activeIdx
+                    ? "bg-[var(--primary-dim)] text-[var(--text)]"
+                    : "text-[var(--text-faint)]",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={clsx(
+                      "h-1.5 w-1.5 rounded-full transition-colors",
+                      selected ? "bg-[var(--primary)]" : "bg-[var(--border-strong)]",
+                    )}
+                  />
+                  {opt.label}
+                </span>
+                {opt.meta && <span className="opacity-50">{opt.meta}</span>}
+              </motion.button>
+            </li>
+          );
+        })}
+      </motion.ul>
+    ) : null;
 
   return (
     <div ref={rootRef} className={clsx("relative", className)}>
@@ -92,73 +205,9 @@ export function ThemedSelect<T extends string>({
         </motion.span>
       </motion.button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.ul
-            role="listbox"
-            aria-label={ariaLabel}
-            initial={{ opacity: 0, y: dropUp ? 6 : -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: dropUp ? -4 : 4, scale: 1 }}
-            exit={{ opacity: 0, y: dropUp ? 6 : -6, scale: 0.98 }}
-            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            className={clsx(
-              "absolute left-0 right-0 z-50 max-h-[16rem] overflow-y-auto overscroll-contain rounded-[var(--radius-lg)] border p-1",
-              "border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[var(--shadow)] backdrop-blur",
-              dropUp ? "bottom-full mb-1" : "top-full mt-1",
-            )}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setActiveIdx((i) => (i + 1) % options.length);
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setActiveIdx((i) => (i - 1 + options.length) % options.length);
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                commit(activeIdx);
-              } else if (e.key === "Escape") {
-                setOpen(false);
-              }
-            }}
-          >
-            {options.map((opt, idx) => {
-              const selected = opt.value === value;
-              return (
-                <li key={opt.value}>
-                  <motion.button
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    tabIndex={-1}
-                    onMouseEnter={() => setActiveIdx(idx)}
-                    onClick={() => commit(idx)}
-                    whileHover={{ x: 2 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={clsx(
-                      "flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-2.5 py-1.5",
-                      "font-mono text-[0.7rem] uppercase tracking-[0.14em] transition-colors",
-                      idx === activeIdx
-                        ? "bg-[var(--primary-dim)] text-[var(--text)]"
-                        : "text-[var(--text-faint)]",
-                    )}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={clsx(
-                          "h-1.5 w-1.5 rounded-full transition-colors",
-                          selected ? "bg-[var(--primary)]" : "bg-[var(--border-strong)]",
-                        )}
-                      />
-                      {opt.label}
-                    </span>
-                    {opt.meta && <span className="opacity-50">{opt.meta}</span>}
-                  </motion.button>
-                </li>
-              );
-            })}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+      {typeof document !== "undefined"
+        ? createPortal(<AnimatePresence>{menu}</AnimatePresence>, document.body)
+        : null}
     </div>
   );
 }
