@@ -18,6 +18,8 @@ interface ThemedSelectProps<T extends string> {
   className?: string;
 }
 
+const MENU_MAX_PX = 256;
+
 export function ThemedSelect<T extends string>({
   options,
   value,
@@ -26,6 +28,7 @@ export function ThemedSelect<T extends string>({
   className,
 }: ThemedSelectProps<T>) {
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = options.find((o) => o.value === value) ?? options[0];
@@ -41,6 +44,12 @@ export function ThemedSelect<T extends string>({
 
   const openMenu = () => {
     setActiveIdx(Math.max(0, options.findIndex((o) => o.value === value)));
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (rect) {
+      const needed = Math.min(MENU_MAX_PX, options.length * 30 + 8);
+      const below = window.innerHeight - rect.bottom;
+      setDropUp(below < needed + 12 && rect.top > below);
+    }
     setOpen(true);
   };
 
@@ -88,13 +97,14 @@ export function ThemedSelect<T extends string>({
           <motion.ul
             role="listbox"
             aria-label={ariaLabel}
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 4, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            initial={{ opacity: 0, y: dropUp ? 6 : -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: dropUp ? -4 : 4, scale: 1 }}
+            exit={{ opacity: 0, y: dropUp ? 6 : -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className={clsx(
-              "absolute left-0 right-0 z-50 mt-1 overflow-hidden rounded-[var(--radius-lg)] border p-1",
+              "absolute left-0 right-0 z-50 max-h-[16rem] overflow-y-auto overscroll-contain rounded-[var(--radius-lg)] border p-1",
               "border-[var(--border-strong)] bg-[var(--surface-2)] shadow-[var(--shadow)] backdrop-blur",
+              dropUp ? "bottom-full mb-1" : "top-full mt-1",
             )}
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
