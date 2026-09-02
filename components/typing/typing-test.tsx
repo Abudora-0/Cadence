@@ -12,6 +12,7 @@ import { useSettings } from "@/lib/store/settings-store";
 import { useTypingEngine } from "@/lib/typing/use-typing-engine";
 import { addRun, bestForConfig, useHistory } from "@/lib/store/history-store";
 import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
+import { isUsableCustomText } from "@/lib/typing/custom-text";
 import type { RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
@@ -29,6 +30,7 @@ function isTypingKey(key: string, code: string): boolean {
 
 export function TypingTest() {
   const config = useSettings((s) => s.config);
+  const customText = useSettings((s) => s.customText);
   const voice = useSettings((s) => s.voice);
   const soundOnError = useSettings((s) => s.soundOnError);
   const focusMode = useSettings((s) => s.focusMode);
@@ -37,7 +39,9 @@ export function TypingTest() {
   const hydrated = useSettings((s) => s.hydrated);
 
   const { snapshot, handleKey, pressText, pressBackspace, restart, finishZen } =
-    useTypingEngine(config);
+    useTypingEngine(config, customText);
+  const needsCustomText =
+    config.mode === "custom" && !isUsableCustomText(customText);
   const { runs } = useHistory();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -205,32 +209,41 @@ export function TypingTest() {
         </div>
 
         <div className="panel relative px-5 py-7 sm:px-8 sm:py-9">
-          <div className="relative">
-            <WordStream
-              snapshot={snapshot}
-              focused={wordsFocused}
-              onFocusRequest={focusInput}
-            />
+          {needsCustomText ? (
+            <div className="flex min-h-[9rem] flex-col items-center justify-center gap-3 text-center">
+              <span className="mono-label">Custom mode</span>
+              <p className="max-w-sm text-sm text-[var(--text-dim)]">
+                Paste a passage in the mode bar above and it becomes the text you
+                type against. Your bests and ghost are tracked per passage.
+              </p>
+            </div>
+          ) : (
+            <div className="relative">
+              <WordStream
+                snapshot={snapshot}
+                focused={wordsFocused}
+                onFocusRequest={focusInput}
+              />
 
-            <input
-              ref={inputRef}
-              type="text"
-              defaultValue=""
-              onKeyDown={onInputKeyDown}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              inputMode="text"
-              aria-label="Type the words shown above"
-              style={{ outline: "none" }}
-              className="absolute inset-0 z-10 h-full w-full cursor-text bg-transparent text-[16px] text-transparent caret-transparent"
-            />
+              <input
+                ref={inputRef}
+                type="text"
+                defaultValue=""
+                onKeyDown={onInputKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                inputMode="text"
+                aria-label="Type the words shown above"
+                style={{ outline: "none" }}
+                className="absolute inset-0 z-10 h-full w-full cursor-text bg-transparent text-[16px] text-transparent caret-transparent"
+              />
 
-            <AnimatePresence>
-              {!inputFocused && !finished && (
+              <AnimatePresence>
+                {!inputFocused && !finished && (
                 <motion.button
                   type="button"
                   initial={{ opacity: 0 }}
@@ -243,9 +256,10 @@ export function TypingTest() {
                     {running ? "tap to keep typing" : "click or tap to start"}
                   </span>
                 </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           <div className="mt-6 border-t border-[var(--border)] pt-4">
             <KeystrokeWaveform lastEvent={snapshot.lastEvent} running={running} />

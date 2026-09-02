@@ -1,4 +1,7 @@
+import { mulberry32, seededFrom } from "./rng";
 import type { Language, ModeConfig } from "./types";
+
+export { seededFrom };
 
 /**
  * Curated word pools. "english" is a tight set of the ~200 most common words for
@@ -32,25 +35,6 @@ const PUNCTUATION_WRAPS: Array<(w: string) => string> = [
 
 function pool(language: Language): string[] {
   return language === "english-1k" ? ENGLISH_1K : ENGLISH_200;
-}
-
-function mulberry32(seed: number): () => number {
-  return function () {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-export function seededFrom(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
 }
 
 /**

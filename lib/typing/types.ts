@@ -1,3 +1,5 @@
+import { seededFrom } from "./rng";
+
 export type Mode = "time" | "words" | "quote" | "code" | "zen" | "custom";
 
 export type Language = "english" | "english-1k";
@@ -66,7 +68,11 @@ export interface RunResult {
   textLength: number;
 }
 
-export function configKeyOf(config: ModeConfig): string {
+export function configKeyOf(config: ModeConfig, customText?: string): string {
+  if (config.mode === "custom") {
+    const t = (customText ?? "").trim();
+    return `custom:${t ? seededFrom(t).toString(36) : "0"}`;
+  }
   const parts: string[] = [config.mode];
   if (config.mode === "time") parts.push(String(config.timeSec));
   if (config.mode === "words") parts.push(String(config.wordCount));
