@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "motion/react";
+import clsx from "clsx";
 import { clearHistory, summarize, useHistory } from "@/lib/store/history-store";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Sparkline } from "@/components/ui/sparkline";
@@ -120,23 +122,41 @@ export function StatsView() {
         <section className="flex flex-col gap-3">
           <span className="mono-label">Personal bests by mode</span>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {bests.map(({ label, run }) => (
-              <motion.div
-                key={run.configKey}
-                initial={{ opacity: 0, y: 8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="panel flex items-center justify-between p-4"
-              >
-                <span className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-[var(--text-dim)]">
-                  {label}
-                </span>
-                <span className="text-lg font-semibold text-[var(--primary)]">
-                  {Math.round(run.wpm)}
-                  <span className="ml-1 text-[0.6rem] tracking-widest opacity-60">wpm</span>
-                </span>
-              </motion.div>
-            ))}
+            {bests.map(({ label, run }) => {
+              const inner = (
+                <>
+                  <span className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-[var(--text-dim)]">
+                    {label}
+                  </span>
+                  <span className="text-lg font-semibold text-[var(--primary)]">
+                    {Math.round(run.wpm)}
+                    <span className="ml-1 text-[0.6rem] tracking-widest opacity-60">
+                      wpm
+                    </span>
+                  </span>
+                </>
+              );
+              return run.text ? (
+                <motion.div
+                  key={run.configKey}
+                  whileHover={{ y: -3, borderColor: "var(--border-strong)" }}
+                >
+                  <Link
+                    href={`/practice/replay/${run.id}`}
+                    className="panel flex items-center justify-between p-4"
+                  >
+                    {inner}
+                  </Link>
+                </motion.div>
+              ) : (
+                <div
+                  key={run.configKey}
+                  className="panel flex items-center justify-between p-4"
+                >
+                  {inner}
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -152,13 +172,17 @@ export function StatsView() {
                 <th className="px-4 py-3 font-normal">WPM</th>
                 <th className="px-4 py-3 font-normal">Acc</th>
                 <th className="px-4 py-3 font-normal">Consistency</th>
+                <th className="px-3 py-3 font-normal" />
               </tr>
             </thead>
             <tbody>
               {runs.slice(0, 25).map((r) => (
                 <tr
                   key={r.id}
-                  className="border-b border-[var(--border)] text-sm last:border-0"
+                  className={clsx(
+                    "border-b border-[var(--border)] text-sm last:border-0",
+                    r.text && "transition-colors hover:bg-[var(--surface-2)]",
+                  )}
                 >
                   <td className="px-4 py-3 font-mono text-[0.72rem] text-[var(--text-faint)]">
                     {new Date(r.at).toLocaleDateString(undefined, {
@@ -172,8 +196,22 @@ export function StatsView() {
                   <td className="px-4 py-3 font-semibold text-[var(--primary)]">
                     {Math.round(r.wpm)}
                   </td>
-                  <td className="px-4 py-3 text-[var(--text-dim)]">{r.accuracy.toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-[var(--text-dim)]">{Math.round(r.consistency)}%</td>
+                  <td className="px-4 py-3 text-[var(--text-dim)]">
+                    {r.accuracy.toFixed(1)}%
+                  </td>
+                  <td className="px-4 py-3 text-[var(--text-dim)]">
+                    {Math.round(r.consistency)}%
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    {r.text ? (
+                      <Link
+                        href={`/practice/replay/${r.id}`}
+                        className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-[var(--text-faint)] transition-colors hover:text-[var(--primary)]"
+                      >
+                        watch
+                      </Link>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>

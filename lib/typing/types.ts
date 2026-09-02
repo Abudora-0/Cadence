@@ -66,6 +66,10 @@ export interface RunResult {
   /** ms offset at which the caret first passed each character index */
   timeline: number[];
   textLength: number;
+  /** The full target text and what was typed. Added later, so older runs
+   *  in history will not have these and cannot be replayed. */
+  text?: string;
+  typed?: string;
 }
 
 export function configKeyOf(config: ModeConfig, customText?: string): string {

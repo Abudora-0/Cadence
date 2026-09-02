@@ -211,6 +211,8 @@ function computeResult(
     keyStats: state.keyStats,
     timeline: state.timeline,
     textLength: totalTargetChars(state.targetWords),
+    text: state.targetWords.join(" "),
+    typed: state.typedWords.slice(0, state.wordIndex + 1).join(" "),
   };
 }
 
