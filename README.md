@@ -46,14 +46,16 @@ local first
 | **Tempo lock** | A metronome reads the median interval between your keys and pulses at that pace, with an optional audible tick. |
 | **Ghost race** | Your best run for the current mode becomes a ghost that moves through the text in real time. Stay ahead of the mark to beat it. |
 | **Live speed graph** | Words per minute, raw speed, and error spikes plotted while you type and again in full on the results card. |
-| **Per key heatmap** | The results card grades every key you touched and calls out your shakiest three. |
+| **Per key heatmap** | The results card grades every key you touched and calls out your shakiest three. The stats page keeps a lifetime version. |
+| **Weak-key drill** | A mode that reads your lifetime per-key accuracy, finds the letters you miss, and builds a run out of real words that lean on them. Falls back to the common hard keys until it has data. |
 | **Watch your run back** | Every run records the exact timing of every character. Replay any run from your history, scrub the timeline, and change playback speed. |
 | **Daily challenge** | Fifty punctuated words, seeded from the date, so everyone gets the same passage each day. Restart as many times as you like and share a generated result card. |
-| **Achievements and streaks** | Nineteen unlockable achievements, a UTC day streak, and a GitHub style practice calendar on the stats page. |
+| **Achievements and streaks** | Twenty unlockable achievements, a UTC day streak, and a GitHub style practice calendar on the stats page. |
 | **Custom text** | Paste any passage, up to 8000 characters, and practice against it. Personal bests and the ghost are scoped per passage. |
+| **Languages** | English and a wide English pool, plus Spanish, French, German, Italian, Portuguese and Roman Urdu. Bests and the ghost are tracked per language. |
 | **Five instrument themes** | Midnight, Paper, Terminal, Synthwave and Nord. Each one remaps the entire surface, including the scrollbar, caret, selection, dropdowns, sliders and counters. |
 | **Synthesised sound** | Typewriter, mechanical, soft tape and marimba key voices, all generated with the Web Audio API. No audio files. |
-| **Modes** | Time attack, word sprint, quote, code (JavaScript and Python), custom text, and an open ended Zen mode. |
+| **Modes** | Time attack, word sprint, quote, code (JavaScript and Python), custom text, weak-key drill, and an open ended Zen mode. |
 | **Command bar** | `Cmd` / `Ctrl` + `K` for modes, themes, navigation and settings. |
 | **Local first** | No account, no backend. Settings live in local storage; run history and progress live in IndexedDB on your device. |
 | **Considered motion** | Animated logo, page transitions, odometer counters, scroll reveals, magnetic buttons, and a full `prefers-reduced-motion` fallback. |
@@ -136,9 +138,9 @@ lib/
   audio/             Web Audio sound engine
   content/           shared feature and shortcut copy
   store/             settings, history, progress, theme and toast stores
-  typing/            the typing engine, word pools, quotes, code, custom text,
-                     replay, streak, achievements, daily, stats, and the
-                     *.test.ts suites
+  typing/            the typing engine, word pools, languages, weak-key drill,
+                     quotes, code, custom text, replay, streak, achievements,
+                     daily, stats, and the *.test.ts suites
 scripts/             one off generators for the icons and social card
 ```
 
@@ -158,7 +160,8 @@ restart, and both the keydown and composed-input paths.
 `custom-text.test.ts`, `replay.test.ts`, `streak.test.ts`,
 `achievements.test.ts` and `daily.test.ts` cover custom passage tokenising,
 the replay model and caret math, streak transitions, each achievement rule,
-and the deterministic daily seed.
+and the deterministic daily seed. `languages.test.ts` and `weak-keys.test.ts`
+cover the extra word pools and the weak-key ranking and drill builder.
 
 ## Contributing
 

@@ -70,6 +70,7 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
       modeCmd("code", "Code"),
       modeCmd("zen", "Zen"),
       modeCmd("custom", "Custom text"),
+      modeCmd("drill", "Weak keys"),
       {
         id: "nav-practice",
         label: "Go to Practice",

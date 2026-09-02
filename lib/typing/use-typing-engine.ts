@@ -9,10 +9,11 @@ import {
   type RunResult,
   type RunSample,
 } from "./types";
-import { buildWords, estimateWordCount } from "./words";
+import { buildWords, estimateWordCount, pool } from "./words";
 import { pickQuote } from "./quotes";
 import { pickCodeSnippet } from "./code-snippets";
 import { isUsableCustomText, tokenizeCustomText } from "./custom-text";
+import { DEFAULT_HARD_KEYS, buildWeakKeyWords } from "./weak-keys";
 import {
   accuracyFrom,
   consistencyFrom,
@@ -77,11 +78,21 @@ function freshTarget(
   config: ModeConfig,
   seed?: number,
   customText = "",
+  weakKeys: string[] = DEFAULT_HARD_KEYS,
 ): string[] {
   if (config.mode === "custom") {
     return isUsableCustomText(customText)
       ? tokenizeCustomText(customText)
       : buildWords({ ...config, mode: "words" }, 30, seed);
+  }
+  if (config.mode === "drill") {
+    const keys = weakKeys.length > 0 ? weakKeys : DEFAULT_HARD_KEYS;
+    return buildWeakKeyWords(
+      pool(config.language),
+      keys,
+      estimateWordCount(config),
+      seed,
+    );
   }
   if (config.mode === "quote") {
     return pickQuote(undefined, seed).text.split(/\s+/).filter(Boolean);
@@ -102,10 +113,11 @@ function initialState(
   config: ModeConfig,
   seed?: number,
   customText = "",
+  weakKeys?: string[],
 ): EngineState {
   return {
     status: "idle",
-    targetWords: freshTarget(config, seed, customText),
+    targetWords: freshTarget(config, seed, customText, weakKeys),
     typedWords: [""],
     wordIndex: 0,
     startedAt: null,
@@ -219,6 +231,8 @@ function computeResult(
 interface EngineOpts {
   /** Locks the run to a fixed text (daily challenge). Skips randomisation. */
   seed?: number;
+  /** Letters to bias the drill-mode word list toward. */
+  weakKeys?: string[];
 }
 
 export function useTypingEngine(
@@ -227,6 +241,8 @@ export function useTypingEngine(
   opts: EngineOpts = {},
 ) {
   const lockedSeed = opts.seed;
+  const weakKeys = opts.weakKeys;
+  const weakSig = (weakKeys ?? []).join("");
   const configKey = configKeyOf(config, customText);
   const modeLabel = configLabelOf(config);
 
@@ -237,7 +253,7 @@ export function useTypingEngine(
   const [seed, setSeed] = useState(lockedSeed ?? 0);
 
   const [state, setState] = useState<EngineState>(() =>
-    initialState(config, lockedSeed ?? 0, customText),
+    initialState(config, lockedSeed ?? 0, customText, weakKeys),
   );
   const stateRef = useRef(state);
   useEffect(() => {
@@ -249,7 +265,7 @@ export function useTypingEngine(
     if (lockedSeed != null) return;
     const random = Math.floor(Math.random() * 0xffffffff) >>> 0;
     setSeed(random);
-    setState(initialState(config, random, customText));
+    setState(initialState(config, random, customText, weakKeys));
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
@@ -258,16 +274,26 @@ export function useTypingEngine(
   const [prevKey, setPrevKey] = useState(configKey);
   if (prevKey !== configKey) {
     setPrevKey(configKey);
-    setState(initialState(config, lockedSeed ?? seed, customText));
+    setState(initialState(config, lockedSeed ?? seed, customText, weakKeys));
+  }
+
+  // Drill mode: when the weak-key list arrives from history (or shifts after a
+  // run), re-roll the text, but only while the run has not started.
+  const [prevWeakSig, setPrevWeakSig] = useState(weakSig);
+  if (prevWeakSig !== weakSig) {
+    setPrevWeakSig(weakSig);
+    if (config.mode === "drill" && state.status === "idle") {
+      setState(initialState(config, lockedSeed ?? seed, customText, weakKeys));
+    }
   }
 
   const restart = useCallback(() => {
     const next =
       lockedSeed ?? (Math.floor(Math.random() * 0xffffffff) >>> 0);
     setSeed(next);
-    setState(initialState(config, next, customText));
+    setState(initialState(config, next, customText, weakKeys));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configKey, lockedSeed]);
+  }, [configKey, lockedSeed, weakSig]);
 
   const finalize = useCallback(() => {
     setState((prev) => {

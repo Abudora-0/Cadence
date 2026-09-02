@@ -1,4 +1,5 @@
 import { mulberry32, seededFrom } from "./rng";
+import { LANGUAGE_POOLS } from "./languages";
 import type { Language, ModeConfig } from "./types";
 
 export { seededFrom };
@@ -33,8 +34,10 @@ const PUNCTUATION_WRAPS: Array<(w: string) => string> = [
   (w) => `${w}-`,
 ];
 
-function pool(language: Language): string[] {
-  return language === "english-1k" ? ENGLISH_1K : ENGLISH_200;
+export function pool(language: Language): string[] {
+  if (language === "english") return ENGLISH_200;
+  if (language === "english-1k") return ENGLISH_1K;
+  return LANGUAGE_POOLS[language] ?? ENGLISH_200;
 }
 
 /**
@@ -68,8 +71,11 @@ export function buildWords(config: ModeConfig, count: number, seed?: number): st
   return out;
 }
 
+export const DRILL_WORD_COUNT = 30;
+
 export function estimateWordCount(config: ModeConfig): number {
   if (config.mode === "words") return config.wordCount;
   if (config.mode === "time") return Math.ceil((config.timeSec / 60) * 140) + 40;
+  if (config.mode === "drill") return DRILL_WORD_COUNT;
   return 60;
 }

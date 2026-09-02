@@ -117,6 +117,15 @@ describe("evaluateUnlocks", () => {
     const at6am = run({ at: new Date(2026, 0, 15, 6, 0).getTime() });
     expect(evaluateUnlocks(input({ run: at6am }))).toContain("early-bird");
   });
+
+  it("sharpshooter needs a drill run at 95 percent or better", () => {
+    const wordsRun = run({ mode: "words", accuracy: 99 });
+    expect(evaluateUnlocks(input({ run: wordsRun }))).not.toContain("sharpshooter");
+    const weakDrill = run({ mode: "drill", accuracy: 96 });
+    expect(evaluateUnlocks(input({ run: weakDrill }))).toContain("sharpshooter");
+    const sloppyDrill = run({ mode: "drill", accuracy: 90 });
+    expect(evaluateUnlocks(input({ run: sloppyDrill }))).not.toContain("sharpshooter");
+  });
 });
 
 describe("ACHIEVEMENTS", () => {

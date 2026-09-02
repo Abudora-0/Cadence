@@ -153,6 +153,13 @@ const RULES: Rule[] = [
     },
   },
   {
+    id: "sharpshooter",
+    label: "Sharpshooter",
+    blurb: "Finish a weak-key drill at 95 percent or better.",
+    group: "Precision",
+    met: (i) => i.run.mode === "drill" && i.run.accuracy >= 95,
+  },
+  {
     id: "all-modes",
     label: "Full kit",
     blurb: "Try every practice mode, including custom text.",

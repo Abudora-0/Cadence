@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { Segmented } from "@/components/ui/segmented";
 import { ThemedSelect } from "@/components/ui/themed-select";
 import { TogglePill } from "@/components/ui/toggle-pill";
 import { useSettings } from "@/lib/store/settings-store";
+import { useHistory } from "@/lib/store/history-store";
 import { isUsableCustomText } from "@/lib/typing/custom-text";
+import { LANGUAGES } from "@/lib/typing/languages";
+import { aggregateKeyStats, weakKeys } from "@/lib/typing/weak-keys";
 import {
   TIME_OPTIONS,
   WORD_OPTIONS,
@@ -23,6 +26,7 @@ const MODES: { value: Mode; label: string }[] = [
   { value: "code", label: "Code" },
   { value: "zen", label: "Zen" },
   { value: "custom", label: "Custom" },
+  { value: "drill", label: "Weak keys" },
 ];
 
 export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
@@ -38,10 +42,21 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
   const togglePunctuation = useSettings((s) => s.togglePunctuation);
   const toggleNumbers = useSettings((s) => s.toggleNumbers);
 
+  const { runs } = useHistory();
+  const weak = useMemo(
+    () => weakKeys(aggregateKeyStats(runs)),
+    [runs],
+  );
+
   const fire = <T,>(fn: (v: T) => void) => (v: T) => {
     fn(v);
     onAnyChange();
   };
+
+  const showLanguage =
+    config.mode === "time" ||
+    config.mode === "words" ||
+    config.mode === "drill";
 
   return (
     <motion.div
@@ -113,37 +128,47 @@ export function ModeBar({ onAnyChange }: { onAnyChange: () => void }) {
         </div>
       )}
 
+      {showLanguage && (
+        <ThemedSelect<Language>
+          ariaLabel="Language"
+          className="w-40"
+          options={LANGUAGES.map((l) => ({ value: l.id, label: l.label }))}
+          value={config.language}
+          onChange={fire(setLanguage)}
+        />
+      )}
+
       {(config.mode === "time" || config.mode === "words") && (
-        <>
-          <ThemedSelect<Language>
-            ariaLabel="Word list"
-            className="w-36"
-            options={[
-              { value: "english", label: "English 200" },
-              { value: "english-1k", label: "English wide" },
-            ]}
-            value={config.language}
-            onChange={fire(setLanguage)}
+        <div className="flex items-center gap-2">
+          <TogglePill
+            label="Punct"
+            active={config.punctuation}
+            onChange={() => {
+              togglePunctuation();
+              onAnyChange();
+            }}
           />
-          <div className="flex items-center gap-2">
-            <TogglePill
-              label="Punct"
-              active={config.punctuation}
-              onChange={() => {
-                togglePunctuation();
-                onAnyChange();
-              }}
-            />
-            <TogglePill
-              label="Numbers"
-              active={config.numbers}
-              onChange={() => {
-                toggleNumbers();
-                onAnyChange();
-              }}
-            />
-          </div>
-        </>
+          <TogglePill
+            label="Numbers"
+            active={config.numbers}
+            onChange={() => {
+              toggleNumbers();
+              onAnyChange();
+            }}
+          />
+        </div>
+      )}
+
+      {config.mode === "drill" && (
+        <p
+          key="drill-hint"
+          className="rise-in w-full font-mono text-[0.6rem] uppercase tracking-[0.16em] text-[var(--text-faint)]"
+        >
+          {weak.basedOnHistory
+            ? "targeting your weakest keys: "
+            : "not enough data yet, drilling common hard keys: "}
+          <span className="text-[var(--incorrect)]">{weak.keys.join(" ")}</span>
+        </p>
       )}
 
       <CustomTextModal
