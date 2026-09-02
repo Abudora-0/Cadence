@@ -130,7 +130,7 @@ export function HeroOscilloscope({ height = 160 }: { height?: number }) {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-1/2 h-40 w-full -translate-y-1/2 opacity-70"
+      className="pointer-events-none absolute inset-x-0 top-1/2 h-40 w-full -translate-y-1/2 opacity-55"
       style={{ height }}
     />
   );
