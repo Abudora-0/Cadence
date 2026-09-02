@@ -17,7 +17,7 @@ import { useTheme } from "@/lib/store/theme-store";
 import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
 import { achievementById } from "@/lib/typing/achievements";
 import { isUsableCustomText } from "@/lib/typing/custom-text";
-import type { RunSample } from "@/lib/typing/types";
+import type { ModeConfig, RunResult, RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
 import { RunHud } from "./run-hud";
@@ -32,9 +32,30 @@ function isTypingKey(key: string, code: string): boolean {
   return key.length === 1 || key === " " || code === "Space" || TYPING_KEYS.has(key);
 }
 
-export function TypingTest() {
-  const config = useSettings((s) => s.config);
-  const customText = useSettings((s) => s.customText);
+interface TypingTestProps {
+  /** Fixed config for the daily challenge; hides the mode bar. */
+  lockedConfig?: ModeConfig;
+  /** Seed lock so the text is the same across mounts and restarts. */
+  seed?: number;
+  /** When set, finished runs are tagged as the daily challenge for that date. */
+  dailyDate?: string;
+  /** Overrides the stored configKey (used so daily bests are per date). */
+  configKeyOverride?: string;
+  /** Called once when a run is saved. */
+  onFinish?: (result: RunResult) => void;
+}
+
+export function TypingTest({
+  lockedConfig,
+  seed,
+  dailyDate,
+  configKeyOverride,
+  onFinish,
+}: TypingTestProps = {}) {
+  const storedConfig = useSettings((s) => s.config);
+  const storedCustomText = useSettings((s) => s.customText);
+  const config = lockedConfig ?? storedConfig;
+  const customText = lockedConfig ? "" : storedCustomText;
   const voice = useSettings((s) => s.voice);
   const soundOnError = useSettings((s) => s.soundOnError);
   const focusMode = useSettings((s) => s.focusMode);
@@ -43,7 +64,7 @@ export function TypingTest() {
   const hydrated = useSettings((s) => s.hydrated);
 
   const { snapshot, handleKey, pressText, pressBackspace, restart, finishZen } =
-    useTypingEngine(config, customText);
+    useTypingEngine(config, customText, seed != null ? { seed } : undefined);
   const needsCustomText =
     config.mode === "custom" && !isUsableCustomText(customText);
   const { runs } = useHistory();
@@ -55,13 +76,19 @@ export function TypingTest() {
   }, [theme]);
   const { progress } = useProgress();
 
+  const onFinishRef = useRef(onFinish);
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const lastKeyHandledAt = useRef(0);
   const lastEventId = useRef<number>(-1);
   const savedResultId = useRef<string | null>(null);
 
-  const best = bestForConfig(runs, snapshot.configKey);
+  const effectiveKey = configKeyOverride ?? snapshot.configKey;
+  const best = bestForConfig(runs, effectiveKey);
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus({ preventScroll: true });
@@ -190,12 +217,26 @@ export function TypingTest() {
 
   // Persist finished runs once.
   useEffect(() => {
-    const result = snapshot.result;
-    if (!result || savedResultId.current === result.id) return;
-    savedResultId.current = result.id;
+    const raw = snapshot.result;
+    if (!raw || savedResultId.current === raw.id) return;
+    savedResultId.current = raw.id;
+
+    const result: RunResult = configKeyOverride
+      ? {
+          ...raw,
+          configKey: configKeyOverride,
+          configLabel: dailyDate ? `daily ${dailyDate}` : raw.configLabel,
+        }
+      : raw;
+
     void addRun(result);
     playFanfare();
-    void recordRun(result, { theme: themeRef.current }).then((newly) => {
+    onFinishRef.current?.(result);
+    void recordRun(result, {
+      theme: themeRef.current,
+      isDaily: Boolean(dailyDate),
+      dailyDate,
+    }).then((newly) => {
       for (const id of newly) {
         const def = achievementById(id);
         if (def) {
@@ -207,7 +248,7 @@ export function TypingTest() {
         }
       }
     });
-  }, [snapshot.result]);
+  }, [snapshot.result, configKeyOverride, dailyDate]);
 
   const running = snapshot.status === "running";
   const finished = snapshot.status === "finished";
@@ -215,22 +256,24 @@ export function TypingTest() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <motion.div
-        animate={{
-          opacity: running && focusMode && inputFocused ? 0.15 : 1,
-          y: running && focusMode && inputFocused ? -4 : 0,
-        }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col gap-3"
-      >
-        {progress.streak.current > 0 && (
-          <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[var(--text-faint)]">
-            <span className="text-[var(--primary)]">&#9650;</span>{" "}
-            {progress.streak.current} day streak
-          </span>
-        )}
-        <ModeBar onAnyChange={restartRun} />
-      </motion.div>
+      {!lockedConfig && (
+        <motion.div
+          animate={{
+            opacity: running && focusMode && inputFocused ? 0.15 : 1,
+            y: running && focusMode && inputFocused ? -4 : 0,
+          }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col gap-3"
+        >
+          {progress.streak.current > 0 && (
+            <span className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-[var(--text-faint)]">
+              <span className="text-[var(--primary)]">&#9650;</span>{" "}
+              {progress.streak.current} day streak
+            </span>
+          )}
+          <ModeBar onAnyChange={restartRun} />
+        </motion.div>
+      )}
 
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">

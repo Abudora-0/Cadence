@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { TypingTest } from "@/components/typing/typing-test";
 import { CadenceLogo } from "@/components/logo/cadence-logo";
 
@@ -27,6 +28,16 @@ export default function PracticePage() {
           a live waveform, a metronome locks to your pace, and a ghost of your best
           run races alongside you.
         </p>
+        <Link
+          href="/daily"
+          className="group flex w-fit items-center gap-2 rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
+        >
+          <span className="text-[var(--primary)]">&#9670;</span>
+          Today&apos;s daily challenge
+          <span className="transition-transform group-hover:translate-x-0.5">
+            &rarr;
+          </span>
+        </Link>
       </header>
 
       <TypingTest />
