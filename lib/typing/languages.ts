@@ -37,6 +37,13 @@ const ROMAN_URDU = `main mein hum tum aap woh yeh wo ye kya kyun kaise kahan kab
   .split(/\s+/)
   .filter(Boolean);
 
+// Native Urdu in the Nastaliq (Arabic) script. This is right to left, so the
+// word stream, caret and replay flip direction when it is in play. Typing it
+// needs an Urdu keyboard layout, which most phones can switch to in a tap.
+const URDU = `میں تم ہم آپ وہ یہ کیا کیوں کیسے کہاں کب کون اور یا لیکن مگر پھر جب تو اگر ورنہ نہیں ہاں اچھا ٹھیک بہت تھوڑا زیادہ کم سب کچھ کوئی سارا ایک دو تین چار پانچ چھ سات آٹھ نو دس آج کل صبح شام رات دن دوپہر وقت دیر جلدی اب پہلے بعد اندر باہر اوپر نیچے آگے پیچھے پاس دور بالکل شاید ضرور بےشک سچ جھوٹ ہونا کرنا جانا آنا دینا لینا کہنا سننا دیکھنا پڑھنا لکھنا بولنا چلنا دوڑنا بیٹھنا اٹھنا سونا جاگنا کھانا پینا بنانا توڑنا کھولنا بند رکھنا اٹھانا گرانا ملنا کھونا سمجھنا سوچنا چاہنا سکنا لگنا رہنا ہو کر گیا رہا والا طرف بات نام طرح چیز جگہ حال بلکہ تاکہ جیسے ویسے یہاں وہاں ابھی کبھی ہمیشہ روز بہتر برابر ذرا خدا اللہ دعا نماز عید ملک زبان سبق دفعہ بار امید انتظار شروع ختم ہے ہیں تھا تھی تھے ہوگا ہوگی گھر کام لوگ دوست دشمن پیار محبت زندگی دنیا دل دماغ جان ہاتھ پاؤں سر آنکھ منہ بال خون پانی آگ ہوا زمین آسمان سورج چاند ستارہ موسم بارش گرمی سردی شہر گاؤں راستہ دروازہ کھڑکی کتاب قلم روشنی رنگ قوم عورت مرد بچہ بچی لڑکا لڑکی انسان بھائی بہن ماں باپ بیٹا بیٹی شادی خوشی غم درد مشکل آسان نیا پرانا بڑا چھوٹا لمبا موٹا پتلا خوبصورت پیارا برا صحیح غلط سچا جھوٹا اندھیرا اجالا ٹھنڈا گرم میٹھا کڑوا نمکین سفید کالا لال ہرا نیلا پیلا خالی بھرا میرا تیرا اس ہمارا تمہارا اپنا کسی تصویر خط مکان برف پہاڑ پھول درخت پتہ لفظ حرف آواز کان دانت انگلی دل بھر نکل چھوڑ پکڑ سمجھا کہا سنا دیکھا لیا دیا کیا آیا`
+  .split(/\s+/)
+  .filter(Boolean);
+
 export const LANGUAGE_POOLS: Partial<Record<Language, string[]>> = {
   spanish: SPANISH,
   french: FRENCH,
@@ -44,9 +51,17 @@ export const LANGUAGE_POOLS: Partial<Record<Language, string[]>> = {
   italian: ITALIAN,
   portuguese: PORTUGUESE,
   "roman-urdu": ROMAN_URDU,
+  urdu: URDU,
 };
 
-export const LANGUAGES: { id: Language; label: string }[] = [
+export interface LanguageMeta {
+  id: Language;
+  label: string;
+  /** Right to left script. */
+  rtl?: boolean;
+}
+
+export const LANGUAGES: LanguageMeta[] = [
   { id: "english", label: "English" },
   { id: "english-1k", label: "English wide" },
   { id: "spanish", label: "Spanish" },
@@ -55,4 +70,21 @@ export const LANGUAGES: { id: Language; label: string }[] = [
   { id: "italian", label: "Italian" },
   { id: "portuguese", label: "Portuguese" },
   { id: "roman-urdu", label: "Urdu (Roman)" },
+  { id: "urdu", label: "Urdu (native)", rtl: true },
 ];
+
+const RTL_LANGUAGES = new Set<Language>(
+  LANGUAGES.filter((l) => l.rtl).map((l) => l.id),
+);
+
+export function isRtlLanguage(language: Language): boolean {
+  return RTL_LANGUAGES.has(language);
+}
+
+/** Matches Arabic-script code points (covers Urdu Nastaliq). */
+const RTL_CHAR = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+
+/** True when the string carries Arabic-script (Urdu) characters. */
+export function hasRtlText(text: string): boolean {
+  return RTL_CHAR.test(text);
+}

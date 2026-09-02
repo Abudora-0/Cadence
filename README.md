@@ -52,7 +52,7 @@ local first
 | **Daily challenge** | Fifty punctuated words, seeded from the date, so everyone gets the same passage each day. Restart as many times as you like and share a generated result card. |
 | **Achievements and streaks** | Twenty unlockable achievements, a UTC day streak, and a GitHub style practice calendar on the stats page. |
 | **Custom text** | Paste any passage, up to 8000 characters, and practice against it. Personal bests and the ghost are scoped per passage. |
-| **Languages** | English and a wide English pool, plus Spanish, French, German, Italian, Portuguese and Roman Urdu. Bests and the ghost are tracked per language. |
+| **Languages** | English and a wide English pool, plus Spanish, French, German, Italian, Portuguese, Roman Urdu, and native Urdu in Nastaliq (right to left). Bests and the ghost are tracked per language. |
 | **Five instrument themes** | Midnight, Paper, Terminal, Synthwave and Nord. Each one remaps the entire surface, including the scrollbar, caret, selection, dropdowns, sliders and counters. |
 | **Synthesised sound** | Typewriter, mechanical, soft tape and marimba key voices, all generated with the Web Audio API. No audio files. |
 | **Modes** | Time attack, word sprint, quote, code (JavaScript and Python), custom text, weak-key drill, and an open ended Zen mode. |
@@ -138,9 +138,9 @@ lib/
   audio/             Web Audio sound engine
   content/           shared feature and shortcut copy
   store/             settings, history, progress, theme and toast stores
-  typing/            the typing engine, word pools, languages, weak-key drill,
-                     quotes, code, custom text, replay, streak, achievements,
-                     daily, stats, and the *.test.ts suites
+  typing/            the typing engine, word pools, languages (incl. right to
+                     left), weak-key drill, quotes, code, custom text, replay,
+                     streak, achievements, daily, stats, and the *.test.ts suites
 scripts/             one off generators for the icons and social card
 ```
 

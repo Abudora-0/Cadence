@@ -19,6 +19,7 @@ import { playFanfare, playKey, unlockAudio } from "@/lib/audio/sound-engine";
 import { achievementById } from "@/lib/typing/achievements";
 import { isUsableCustomText } from "@/lib/typing/custom-text";
 import { aggregateKeyStats, weakKeys } from "@/lib/typing/weak-keys";
+import { isRtlLanguage } from "@/lib/typing/languages";
 import type { ModeConfig, RunResult, RunSample } from "@/lib/typing/types";
 import { ModeBar } from "./mode-bar";
 import { SpeedGraph } from "./speed-graph";
@@ -309,6 +310,7 @@ export function TypingTest({
                 ref={inputRef}
                 type="text"
                 defaultValue=""
+                dir={isRtlLanguage(config.language) ? "rtl" : "ltr"}
                 onKeyDown={onInputKeyDown}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}

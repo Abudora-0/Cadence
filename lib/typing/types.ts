@@ -17,7 +17,8 @@ export type Language =
   | "german"
   | "italian"
   | "portuguese"
-  | "roman-urdu";
+  | "roman-urdu"
+  | "urdu";
 export type CodeLang = "javascript" | "python";
 
 export interface ModeConfig {

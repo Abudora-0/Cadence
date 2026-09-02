@@ -1,5 +1,5 @@
 import { mulberry32, seededFrom } from "./rng";
-import { LANGUAGE_POOLS } from "./languages";
+import { LANGUAGE_POOLS, isRtlLanguage } from "./languages";
 import type { Language, ModeConfig } from "./types";
 
 export { seededFrom };
@@ -50,12 +50,15 @@ export function buildWords(config: ModeConfig, count: number, seed?: number): st
   const out: string[] = [];
   let lastCapital = false;
 
+  // Latin punctuation and capitals do not belong in a right to left script.
+  const decorate = !isRtlLanguage(config.language);
+
   for (let i = 0; i < count; i += 1) {
     let w = words[Math.floor(rand() * words.length)];
 
-    if (config.numbers && rand() < 0.12) {
+    if (decorate && config.numbers && rand() < 0.12) {
       w = String(Math.floor(rand() * 9999));
-    } else if (config.punctuation) {
+    } else if (decorate && config.punctuation) {
       if (rand() < 0.16) {
         w = PUNCTUATION_WRAPS[Math.floor(rand() * PUNCTUATION_WRAPS.length)](w);
       }
