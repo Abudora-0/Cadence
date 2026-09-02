@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CadenceLogo } from "@/components/logo/cadence-logo";
+import { MagneticButton } from "@/components/ui/magnetic-button";
+import { Reveal } from "@/components/ui/reveal";
 import { FEATURES } from "@/lib/content/features";
 import { SHORTCUTS } from "@/lib/content/shortcuts";
 
@@ -31,31 +32,36 @@ export default function AboutPage() {
       </header>
 
       <section className="grid gap-3 sm:grid-cols-2">
-        {FEATURES.map((f) => (
-          <div key={f.title} className="panel flex flex-col gap-2 p-5">
+        {FEATURES.map((f, i) => (
+          <Reveal
+            key={f.title}
+            delay={(i % 2) * 60}
+            className="panel flex flex-col gap-2 p-5"
+          >
             <h2 className="font-mono text-[0.72rem] uppercase tracking-[0.18em] text-[var(--primary)]">
               {f.title}
             </h2>
             <p className="text-sm leading-relaxed text-[var(--text-dim)]">
               {f.body}
             </p>
-          </div>
+          </Reveal>
         ))}
       </section>
 
       <section className="flex flex-col gap-4">
         <span className="mono-label">Keyboard shortcuts</span>
         <div className="panel divide-y divide-[var(--border)]">
-          {SHORTCUTS.map((s) => (
-            <div
+          {SHORTCUTS.map((s, i) => (
+            <Reveal
               key={s.keys}
+              delay={i * 40}
               className="flex items-center justify-between gap-4 px-5 py-3"
             >
               <kbd className="rounded border border-[var(--border-strong)] px-2 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-[var(--text-dim)]">
                 {s.keys}
               </kbd>
               <span className="text-sm text-[var(--text-dim)]">{s.action}</span>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -68,12 +74,9 @@ export default function AboutPage() {
           files to download. The whole thing is a static client app and deploys to
           Vercel with zero configuration.
         </p>
-        <Link
-          href="/practice"
-          className="mt-2 w-fit rounded-[var(--radius)] bg-[var(--primary)] px-5 py-2.5 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-[var(--primary-ink)] transition-transform hover:-translate-y-0.5"
-        >
+        <MagneticButton href="/practice" className="mt-2">
           Start a run
-        </Link>
+        </MagneticButton>
       </section>
     </div>
   );

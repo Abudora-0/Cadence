@@ -8,6 +8,7 @@ import { clearHistory, summarize, useHistory } from "@/lib/store/history-store";
 import { clearProgress, useProgress } from "@/lib/store/progress-store";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { Sparkline } from "@/components/ui/sparkline";
+import { Reveal } from "@/components/ui/reveal";
 import { AchievementsGrid } from "./achievements-grid";
 import { PracticeCalendar } from "./practice-calendar";
 import { StreakBadge } from "./streak-badge";
@@ -151,7 +152,7 @@ export function StatsView() {
         />
       </header>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <Reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Tile label="Runs" value={summary.totalRuns} />
         <div className="panel flex flex-col gap-2 p-4">
           <span className="mono-label">Time typed</span>
@@ -165,15 +166,15 @@ export function StatsView() {
         <Tile label="Best WPM" value={summary.bestWpm} />
         <Tile label="Avg WPM" value={summary.avgWpm} decimals={1} />
         <Tile label="Avg accuracy" value={summary.avgAccuracy} decimals={1} suffix="%" />
-      </div>
+      </Reveal>
 
-      <section className="panel flex flex-col gap-4 p-5">
+      <Reveal as="section" className="panel flex flex-col gap-4 p-5">
         <span className="mono-label">WPM progression / last {progression.length} runs</span>
         <Sparkline values={progression} height={120} />
-      </section>
+      </Reveal>
 
       {bests.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <Reveal as="section" className="flex flex-col gap-3">
           <span className="mono-label">Personal bests by mode</span>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {bests.map(({ label, run }) => {
@@ -191,13 +192,10 @@ export function StatsView() {
                 </>
               );
               return run.text ? (
-                <motion.div
-                  key={run.configKey}
-                  whileHover={{ y: -3, borderColor: "var(--border-strong)" }}
-                >
+                <motion.div key={run.configKey} whileHover={{ y: -3 }}>
                   <Link
                     href={`/practice/replay/${run.id}`}
-                    className="panel flex items-center justify-between p-4"
+                    className="panel flex items-center justify-between p-4 transition-colors hover:border-[var(--border-strong)]"
                   >
                     {inner}
                   </Link>
@@ -212,10 +210,10 @@ export function StatsView() {
               );
             })}
           </div>
-        </section>
+        </Reveal>
       )}
 
-      <section className="flex flex-col gap-3">
+      <Reveal as="section" className="flex flex-col gap-3">
         <span className="mono-label">Recent runs</span>
         <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border)]">
           <table className="w-full border-collapse text-left">
@@ -271,7 +269,7 @@ export function StatsView() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Reveal>
 
       <PracticeCalendar runDays={progress.runDays} />
 

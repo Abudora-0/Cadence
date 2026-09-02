@@ -91,6 +91,8 @@ export function TickSlider({
         <motion.span
           className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-[var(--primary)] bg-[var(--surface)] shadow-[0_0_14px_var(--glow)]"
           animate={{ left: `${pct}%` }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 1.25 }}
           transition={{ type: "spring", stiffness: 480, damping: 34 }}
         />
       </div>

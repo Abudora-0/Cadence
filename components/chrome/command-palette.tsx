@@ -196,10 +196,13 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
               )}
               {filtered.map((cmd, i) => (
                 <li key={cmd.id}>
-                  <button
+                  <motion.button
                     type="button"
                     onMouseEnter={() => setActive(i)}
                     onClick={runActive}
+                    animate={{ x: i === active ? 3 : 0 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 34 }}
                     className={clsx(
                       "flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-2 text-left transition-colors",
                       i === active ? "bg-[var(--primary-dim)]" : "",
@@ -209,7 +212,7 @@ export function CommandPalette({ onOpenSettings }: { onOpenSettings: () => void 
                     <span className="font-mono text-[0.56rem] uppercase tracking-[0.16em] text-[var(--text-faint)]">
                       {cmd.hint ?? cmd.group}
                     </span>
-                  </button>
+                  </motion.button>
                 </li>
               ))}
             </ul>

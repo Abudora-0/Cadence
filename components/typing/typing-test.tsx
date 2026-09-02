@@ -323,11 +323,16 @@ export function TypingTest({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={focusInput}
+                  whileHover="hover"
+                  whileTap="tap"
                   className="absolute inset-0 z-20 flex items-center justify-center bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] backdrop-blur-[2px]"
                 >
-                  <span className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)]">
+                  <motion.span
+                    variants={{ hover: { y: -2 }, tap: { scale: 0.96 } }}
+                    className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)]"
+                  >
                     {running ? "tap to keep typing" : "click or tap to start"}
-                  </span>
+                  </motion.span>
                 </motion.button>
                 )}
               </AnimatePresence>
@@ -352,13 +357,15 @@ export function TypingTest({
           ) : (
             <span />
           )}
-          <button
+          <motion.button
             type="button"
             onClick={restartRun}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.96 }}
             className="self-start rounded-[var(--radius)] border border-[var(--border-strong)] px-4 py-2 font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[var(--text-dim)] transition-colors hover:border-[var(--primary)] hover:text-[var(--text)]"
           >
             {config.mode === "zen" && running ? "finish  (enter)" : "restart  (tab)"}
-          </button>
+          </motion.button>
         </div>
       </div>
 

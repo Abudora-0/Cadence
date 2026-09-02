@@ -12,17 +12,18 @@ interface TogglePillProps {
 
 export function TogglePill({ label, active, onChange, icon }: TogglePillProps) {
   return (
-    <button
+    <motion.button
       type="button"
       role="switch"
       aria-checked={active}
       onClick={() => onChange(!active)}
+      whileTap={{ scale: 0.95 }}
       className={clsx(
         "group inline-flex items-center gap-2 rounded-[var(--radius)] border px-2.5 py-1.5",
         "font-mono text-[0.62rem] uppercase tracking-[0.16em] transition-colors",
         active
           ? "border-[var(--primary)] bg-[var(--primary-dim)] text-[var(--text)]"
-          : "border-[var(--border)] text-[var(--text-faint)] hover:text-[var(--text-dim)]",
+          : "border-[var(--border)] text-[var(--text-faint)] hover:border-[var(--border-strong)] hover:text-[var(--text-dim)]",
       )}
     >
       <span
@@ -40,6 +41,6 @@ export function TogglePill({ label, active, onChange, icon }: TogglePillProps) {
       </span>
       {icon}
       {label}
-    </button>
+    </motion.button>
   );
 }

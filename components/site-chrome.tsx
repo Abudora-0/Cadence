@@ -21,6 +21,8 @@ const NAV = [
   { href: "/about", label: "About" },
 ];
 
+const MotionLink = motion.create(Link);
+
 const THEME_ORDER = THEMES.map((t) => t.id);
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
@@ -67,9 +69,11 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
             {NAV.map((item) => {
               const activeLink = pathname.startsWith(item.href);
               return (
-                <Link
+                <MotionLink
                   key={item.href}
                   href={item.href}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.95 }}
                   className={clsx(
                     "relative rounded-[var(--radius)] px-3 py-1.5 font-mono text-[0.66rem] uppercase tracking-[0.18em] transition-colors",
                     activeLink
@@ -85,17 +89,19 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
                     />
                   )}
                   {item.label}
-                </Link>
+                </MotionLink>
               );
             })}
           </nav>
 
           <div className="flex items-center gap-2">
             <ThemeSwitcher />
-            <button
+            <motion.button
               type="button"
               onClick={() => setSettingsOpen(true)}
               aria-label="Open tuning panel"
+              whileHover={{ rotate: 20 }}
+              whileTap={{ scale: 0.9 }}
               className="rounded-[var(--radius)] border border-[var(--border)] p-2 text-[var(--text-dim)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)]"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -107,13 +113,14 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
                 />
                 <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.4" />
               </svg>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Menu"
               aria-expanded={menuOpen}
-              className="rounded-[var(--radius)] border border-[var(--border)] p-2 text-[var(--text-dim)] transition-colors hover:text-[var(--text)] sm:hidden"
+              whileTap={{ scale: 0.9 }}
+              className="rounded-[var(--radius)] border border-[var(--border)] p-2 text-[var(--text-dim)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] sm:hidden"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path
@@ -123,7 +130,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
                   strokeLinecap="round"
                 />
               </svg>
-            </button>
+            </motion.button>
           </div>
         </div>
 

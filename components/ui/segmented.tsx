@@ -39,19 +39,20 @@ export function Segmented<T extends string | number>({
       {options.map((opt) => {
         const active = opt.value === value;
         return (
-          <button
+          <motion.button
             key={String(opt.value)}
             type="button"
             role="radio"
             aria-checked={active}
             title={opt.hint}
             onClick={() => onChange(opt.value)}
+            whileTap={{ scale: 0.94 }}
             className={clsx(
               "relative z-10 rounded-[calc(var(--radius)-1px)] font-mono uppercase tracking-[0.14em] transition-colors",
               size === "sm" ? "px-2.5 py-1 text-[0.62rem]" : "px-3.5 py-1.5 text-[0.68rem]",
               active
                 ? "text-[var(--primary-ink)]"
-                : "text-[var(--text-faint)] hover:text-[var(--text-dim)]",
+                : "text-[var(--text-faint)] hover:bg-[var(--surface-2)] hover:text-[var(--text-dim)]",
             )}
           >
             {active && (
@@ -62,7 +63,7 @@ export function Segmented<T extends string | number>({
               />
             )}
             {opt.label}
-          </button>
+          </motion.button>
         );
       })}
     </div>
