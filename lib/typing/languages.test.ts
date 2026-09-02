@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { LANGUAGES, LANGUAGE_POOLS } from "./languages";
+import {
+  LANGUAGES,
+  LANGUAGE_POOLS,
+  hasRtlText,
+  isRtlLanguage,
+} from "./languages";
 import { buildWords, pool } from "./words";
 import { DEFAULT_MODE_CONFIG, type Language, type ModeConfig } from "./types";
 
@@ -15,6 +20,7 @@ const NON_ENGLISH: Language[] = [
   "italian",
   "portuguese",
   "roman-urdu",
+  "urdu",
 ];
 
 describe("LANGUAGES", () => {
@@ -63,6 +69,41 @@ describe("extra language pools", () => {
   it("accented languages actually carry diacritics", () => {
     const joined = LANGUAGE_POOLS.french!.join(" ");
     expect(joined).toMatch(/[àâçéèêëîïôùûü]/);
+  });
+});
+
+describe("Urdu (native script)", () => {
+  it("is flagged right to left in the language list", () => {
+    expect(LANGUAGES.find((l) => l.id === "urdu")?.rtl).toBe(true);
+    expect(isRtlLanguage("urdu")).toBe(true);
+    expect(isRtlLanguage("roman-urdu")).toBe(false);
+    expect(isRtlLanguage("english")).toBe(false);
+  });
+
+  it("is a pool of Arabic-script words", () => {
+    const words = LANGUAGE_POOLS.urdu!;
+    expect(words.length).toBeGreaterThanOrEqual(150);
+    for (const w of words) {
+      expect(hasRtlText(w)).toBe(true);
+      expect(w).not.toMatch(/[a-z]/i);
+    }
+  });
+
+  it("hasRtlText only fires on Arabic script", () => {
+    expect(hasRtlText("hold a steady tempo")).toBe(false);
+    expect(hasRtlText("زندگی")).toBe(true);
+    expect(hasRtlText("the word زندگی here")).toBe(true);
+  });
+
+  it("buildWords skips Latin punctuation and digits for Urdu", () => {
+    const words = buildWords(
+      cfg({ language: "urdu", punctuation: true, numbers: true }),
+      200,
+      3,
+    );
+    for (const w of words) {
+      expect(w).not.toMatch(/[.,!?;:"'()0-9-]/);
+    }
   });
 });
 

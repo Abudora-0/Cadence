@@ -11,6 +11,7 @@ import {
   caretIndexAt,
   samplesUpTo,
 } from "@/lib/typing/replay";
+import { hasRtlText } from "@/lib/typing/languages";
 import { Segmented } from "@/components/ui/segmented";
 import { SpeedGraph } from "./speed-graph";
 import { ResultsCard } from "./results-card";
@@ -25,6 +26,7 @@ export function RunReplay({ run }: { run: RunResult }) {
     () => buildReplay(run.text ?? "", run.typed, run.timeline, run.durationSec),
     [run],
   );
+  const rtl = useMemo(() => hasRtlText(run.text ?? ""), [run.text]);
 
   const [tMs, setTMs] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -89,8 +91,12 @@ export function RunReplay({ run }: { run: RunResult }) {
 
       <div className="panel px-5 py-7 sm:px-8 sm:py-9">
         <p
-          className="flex flex-wrap gap-x-[0.5ch] gap-y-1 text-[1.6rem] leading-[42px] tracking-tight"
-          style={{ fontFamily: "var(--font-display)" }}
+          dir={rtl ? "rtl" : "ltr"}
+          className={clsx(
+            "flex flex-wrap gap-x-[0.5ch] gap-y-1 tracking-tight",
+            rtl ? "rtl-text text-[1.4rem] leading-[58px]" : "text-[1.6rem] leading-[42px]",
+          )}
+          style={{ fontFamily: rtl ? "var(--font-urdu)" : "var(--font-display)" }}
         >
           {model.chars.map((c, i) => {
             const passed = i < caret;
@@ -98,7 +104,10 @@ export function RunReplay({ run }: { run: RunResult }) {
               <span key={i} className="relative whitespace-pre">
                 {i === caret && (
                   <motion.span
-                    className="pointer-events-none absolute -left-[1px] top-1/2 h-[1.1em] w-[2px] -translate-y-1/2 bg-[var(--caret)] shadow-[0_0_12px_var(--glow)]"
+                    className={clsx(
+                      "pointer-events-none absolute top-1/2 h-[1.1em] w-[2px] -translate-y-1/2 bg-[var(--caret)] shadow-[0_0_12px_var(--glow)]",
+                      rtl ? "-right-[1px]" : "-left-[1px]",
+                    )}
                     layout={!reduce}
                     transition={
                       reduce

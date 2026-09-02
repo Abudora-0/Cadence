@@ -61,6 +61,8 @@
     "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo,
     Consolas, monospace;
+  --font-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Awami Nastaliq",
+    "Segoe UI", serif;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -371,6 +373,14 @@ body {
 
 .glow-text {
   text-shadow: 0 0 24px var(--glow);
+}
+
+/* Nastaliq Urdu and other right to left scripts in the typing surface. The
+   font sits below the caret baseline, so it needs extra leading. */
+.rtl-text {
+  direction: rtl;
+  font-family: var(--font-urdu);
+  font-feature-settings: normal;
 }
 
 /* CRT scanline overlay for the terminal theme */

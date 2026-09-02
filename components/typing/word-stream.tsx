@@ -1,9 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import clsx from "clsx";
 import type { EngineSnapshot } from "@/lib/typing/use-typing-engine";
+import { hasRtlText } from "@/lib/typing/languages";
 import { useSettings } from "@/lib/store/settings-store";
 
 interface WordStreamProps {
@@ -12,12 +13,19 @@ interface WordStreamProps {
   onFocusRequest: () => void;
 }
 
-const LINE_HEIGHT = 46;
 const VISIBLE_LINES = 3;
+const LTR_LINE_HEIGHT = 46;
+const RTL_LINE_HEIGHT = 64;
 
 export function WordStream({ snapshot, focused, onFocusRequest }: WordStreamProps) {
   const caretStyle = useSettings((s) => s.caret);
   const smooth = useSettings((s) => s.smoothCaret);
+
+  const rtl = useMemo(
+    () => hasRtlText(snapshot.targetWords.join(" ")),
+    [snapshot.targetWords],
+  );
+  const lineHeight = rtl ? RTL_LINE_HEIGHT : LTR_LINE_HEIGHT;
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const flowRef = useRef<HTMLDivElement>(null);
@@ -49,30 +57,48 @@ export function WordStream({ snapshot, focused, onFocusRequest }: WordStreamProp
 
     const flowBox = flow.getBoundingClientRect();
     const box = target.getBoundingClientRect();
-    const x = box.left - flowBox.left + (atEnd ? box.width : 0);
+    // The caret sits before the target character. In LTR that is the left edge,
+    // in RTL the right edge. At the end of a word it flips to the far side.
+    const x = rtl
+      ? box.right - flowBox.left - (atEnd ? box.width : 0)
+      : box.left - flowBox.left + (atEnd ? box.width : 0);
     const y = box.top - flowBox.top;
     setCaret({ x, y, h: box.height, ready: true });
 
     // Keep the active line pinned to the middle row.
-    const line = Math.round(y / LINE_HEIGHT);
-    const desired = Math.max(0, (line - 1) * LINE_HEIGHT);
+    const line = Math.round(y / lineHeight);
+    const desired = Math.max(0, (line - 1) * lineHeight);
     setScrollY(desired);
-  }, [activeKey, snapshot.wordCells, snapshot.wordIndex, snapshot.caretOffset]);
+  }, [
+    activeKey,
+    snapshot.wordCells,
+    snapshot.wordIndex,
+    snapshot.caretOffset,
+    rtl,
+    lineHeight,
+  ]);
 
   return (
     <div
       ref={wrapRef}
       onClick={onFocusRequest}
+      dir={rtl ? "rtl" : "ltr"}
       className={clsx(
         "relative w-full cursor-text overflow-hidden",
         !focused && "focus-dim",
       )}
-      style={{ height: LINE_HEIGHT * VISIBLE_LINES }}
+      style={{ height: lineHeight * VISIBLE_LINES }}
     >
       <motion.div
         ref={flowRef}
-        className="flex flex-wrap gap-x-[0.55ch] gap-y-1 text-[1.75rem] leading-[46px] tracking-tight"
-        style={{ fontFamily: "var(--font-display)" }}
+        className={clsx(
+          "flex flex-wrap gap-x-[0.55ch] gap-y-1 tracking-tight",
+          rtl ? "rtl-text text-[1.5rem]" : "text-[1.75rem]",
+        )}
+        style={{
+          fontFamily: rtl ? "var(--font-urdu)" : "var(--font-display)",
+          lineHeight: `${lineHeight}px`,
+        }}
         animate={{ y: -scrollY }}
         transition={{ type: "spring", stiffness: 220, damping: 32 }}
       >
